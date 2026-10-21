@@ -3,7 +3,7 @@ import { ReactNode } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, TextInput, TextInputProps, View, ViewStyle } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import Svg, { Defs, LinearGradient as SvgGradient, Path, Rect, Stop } from 'react-native-svg';
+import Svg, { Circle, Defs, LinearGradient as SvgGradient, Path, Stop } from 'react-native-svg';
 
 // Couleurs relevées sur l'affiche officielle de la Mutuelle de Santé Pamezi.
 export const C = {
@@ -38,12 +38,15 @@ export function Ecran({ children, bords = ['top'] }: { children: ReactNode; bord
   );
 }
 
-/** Tracé du logo Pamezi : un P dont le creux forme une croix médicale (viewBox 100×100). */
-export const TRACE_P =
-  'M30 18 H56 A22 22 0 0 1 56 62 H46 V82 H30 Z M55 31 H61 V37 H67 V43 H61 V49 H55 V43 H49 V37 H55 Z';
+/** Tracé du « M » du logo Pamezi, repris de l'affiche officielle (viewBox 100×100). */
+export const TRACE_M = 'M30 68 V32 H40 L50 48 L60 32 H70 V68 H61 V47 L50 63 L39 47 V68 Z';
 
-/** Logo Pamezi. Par défaut : P blanc sur carré bleu dégradé ; `inverse` : P bleu sur carré blanc. */
+/**
+ * Logo Pamezi : « M » dans un cercle cerclé d'un anneau, comme sur l'affiche.
+ * Par défaut : M blanc sur disque bleu dégradé ; `inverse` : M bleu sur disque blanc.
+ */
 export function Logo({ taille = 48, inverse }: { taille?: number; inverse?: boolean }) {
+  const encre = inverse ? C.bleu : C.blanc;
   return (
     <Svg width={taille} height={taille} viewBox="0 0 100 100" accessibilityLabel="Logo Pamezi">
       <Defs>
@@ -53,8 +56,9 @@ export function Logo({ taille = 48, inverse }: { taille?: number; inverse?: bool
           <Stop offset="1" stopColor={C.bleuNuit} />
         </SvgGradient>
       </Defs>
-      <Rect width="100" height="100" rx="24" fill={inverse ? C.blanc : 'url(#pmz)'} />
-      <Path d={TRACE_P} fill={inverse ? C.bleu : C.blanc} fillRule="evenodd" />
+      <Circle cx="50" cy="50" r="50" fill={inverse ? C.blanc : 'url(#pmz)'} />
+      <Circle cx="50" cy="50" r="39" fill="none" stroke={encre} strokeWidth="5" />
+      <Path d={TRACE_M} fill={encre} />
     </Svg>
   );
 }
