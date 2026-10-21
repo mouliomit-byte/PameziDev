@@ -83,6 +83,7 @@ export function creerApiDemo(): Api {
     formules: () => executer((c) => S.formulesActives(c)),
     centres: () => executer((c) => S.listerCentres(c)),
     stats: () => executer((c) => S.statistiquesPubliques(c)),
+    reglages: () => executer((c) => S.lireReglages(c)),
     membre: {
       adherer: (d) => executer(async (c) => {
         const profil = await S.adherer(c, d);
@@ -151,6 +152,11 @@ export function creerApiDemo(): Api {
       journal: (j) => executer(async (c) => {
         await admin(c, j);
         return S.listerJournal(c);
+      }),
+      enregistrerReglages: (j, r) => executer(async (c) => S.enregistrerReglages(c, await admin(c, j), r)),
+      notifications: (j) => executer(async (c) => {
+        await admin(c, j);
+        return S.notificationsDuBackOffice(c);
       }),
       exporterCsv: (j) => executer(async (c) => {
         await admin(c, j);

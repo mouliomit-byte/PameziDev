@@ -17,13 +17,22 @@
         "buildType": "apk"
       },
       "env": {
-        "EXPO_PUBLIC_API_URL": "https://ghzlndruycdlujbdbrwm.supabase.co/functions/v1"
+        "EXPO_PUBLIC_API_URL": "https://ghzlndruycdlujbdbrwm.supabase.co/functions/v1",
+        "EXPO_PUBLIC_EDITION": "client"
       }
     },
     "production": {
       "autoIncrement": true,
       "env": {
-        "EXPO_PUBLIC_API_URL": "https://ghzlndruycdlujbdbrwm.supabase.co/functions/v1"
+        "EXPO_PUBLIC_API_URL": "https://ghzlndruycdlujbdbrwm.supabase.co/functions/v1",
+        "EXPO_PUBLIC_EDITION": "client"
+      }
+    },
+    "gestion": {
+      "extends": "preview",
+      "env": {
+        "EXPO_PUBLIC_API_URL": "https://ghzlndruycdlujbdbrwm.supabase.co/functions/v1",
+        "EXPO_PUBLIC_EDITION": "gestion"
       }
     }
   },

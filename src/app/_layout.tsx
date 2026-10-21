@@ -45,6 +45,7 @@ function Navigation() {
         <Stack.Screen name="cotiser" options={{ title: 'Payer ma cotisation', presentation: 'modal' }} />
         <Stack.Screen name="demande" options={{ title: 'Demande de prise en charge', presentation: 'modal' }} />
         <Stack.Screen name="connexion" options={{ title: 'Se connecter', presentation: 'modal' }} />
+        <Stack.Screen name="notifications" options={{ title: 'Notifications', presentation: 'modal' }} />
         <Stack.Screen name="admin" options={{ headerShown: false }} />
         <Stack.Screen name="+not-found" options={{ headerShown: false }} />
       </Stack>

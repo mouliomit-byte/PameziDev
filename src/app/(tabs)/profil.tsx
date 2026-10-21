@@ -2,6 +2,7 @@ import { router } from 'expo-router';
 import { useState } from 'react';
 import { Text, View } from 'react-native';
 
+import { OutilsAbonne } from '@/components/notifications';
 import { Bouton, C, Carte, Degrade, Ecran, Ligne, Logo, s, Section, Titre, Tricolore, Vide } from '@/components/ui';
 import { ChoixAffichage } from '@/components/affichage';
 import { CONTACTS, dateFr, SLOGAN } from '@/lib/data';
@@ -16,6 +17,7 @@ export default function Profil() {
   if (!membre || !formule) {
     return (
       <Ecran>
+        <OutilsAbonne />
         <Titre>Ma carte</Titre>
         <Vide icone="card" texte="Votre carte de membre apparaîtra ici après votre adhésion.">
           <Bouton titre="Adhérer" icone="person-add" onPress={() => router.push('/adhesion')} />
@@ -32,6 +34,7 @@ export default function Profil() {
 
   return (
     <Ecran>
+      <OutilsAbonne />
       <Titre sous="À présenter au centre de santé">Ma carte de membre</Titre>
 
       {/* Carte de membre */}

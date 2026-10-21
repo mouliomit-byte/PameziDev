@@ -2,6 +2,7 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { router } from 'expo-router';
 import { Text, View } from 'react-native';
 
+import { OutilsAbonne } from '@/components/notifications';
 import { Badge, Bouton, C, Carte, Ecran, s, Section, Titre, Vide } from '@/components/ui';
 import { dateFr, DEVISE, fcfa } from '@/lib/data';
 import { useActualiserAuFocus, usePamezi } from '@/lib/store';
@@ -21,6 +22,7 @@ export default function Soins() {
 
   return (
     <Ecran>
+      <OutilsAbonne />
       <Titre sous={DEVISE}>Mes soins</Titre>
 
       {membre && formule ? (

@@ -14,7 +14,9 @@ import type {
   EntreeJournal,
   Formule,
   ModePaiement,
+  Notification,
   Profil,
+  Reglages,
   RoleAdmin,
   Statistiques,
   StatutCotisation,
@@ -35,6 +37,8 @@ export type Api = {
   formules(): Promise<Formule[]>;
   centres(): Promise<Centre[]>;
   stats(): Promise<{ membres: number }>;
+  /** Couleur de l'application choisie par le propriétaire. */
+  reglages(): Promise<Reglages>;
   membre: {
     adherer(d: DonneesAdhesion): Promise<{ jeton: string; profil: Profil }>;
     connecter(telephone: string, pin: string): Promise<{ jeton: string; profil: Profil }>;
@@ -68,6 +72,8 @@ export type Api = {
     journal(j: string): Promise<EntreeJournal[]>;
     /** Liste des membres au format CSV (séparateur « ; », lisible par Excel). */
     exporterCsv(j: string): Promise<string>;
+    enregistrerReglages(j: string, r: Reglages): Promise<Reglages>;
+    notifications(j: string): Promise<Notification[]>;
   };
 };
 
@@ -103,6 +109,7 @@ function creerApiHttp(adresse: string): Api {
     formules: () => appel('GET', '/formules'),
     centres: () => appel('GET', '/centres'),
     stats: () => appel('GET', '/stats'),
+    reglages: () => appel('GET', '/reglages'),
     membre: {
       adherer: (d) => appel('POST', '/membres', d),
       connecter: (telephone, pin) => appel('POST', '/membres/connexion', { telephone, pin }),
@@ -133,6 +140,8 @@ function creerApiHttp(adresse: string): Api {
       creerGestionnaire: (j, d) => appel('POST', '/admin/gestionnaires', d, j),
       activerGestionnaire: (j, id, actif) => appel('PATCH', `/admin/gestionnaires/${id}`, { actif }, j),
       journal: (j) => appel('GET', '/admin/journal', undefined, j),
+      enregistrerReglages: (j, r) => appel('PUT', '/admin/reglages', r, j),
+      notifications: (j) => appel('GET', '/admin/notifications', undefined, j),
       exporterCsv: async (j) => {
         const r = await fetch(`${base}/api/admin/membres.csv`, { headers: { Authorization: `Bearer ${j}` } }).catch(() => null);
         if (!r || !r.ok) throw new ErreurApi(r?.status ?? 0, 'Export impossible pour le moment.');

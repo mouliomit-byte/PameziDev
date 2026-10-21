@@ -1,8 +1,10 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { Tabs } from 'expo-router';
+import { Redirect, Tabs } from 'expo-router';
 import { ColorValue } from 'react-native';
 
 import { C, IconName } from '@/components/ui';
+import { AVEC_ESPACE_CLIENT } from '@/lib/edition';
+import { useSuiviMembre } from '@/lib/notifications';
 import { RedessinerAuTheme, useAffichage } from '@/lib/theme';
 
 function icone(name: IconName) {
@@ -13,6 +15,9 @@ function icone(name: IconName) {
 
 export default function TabsLayout() {
   useAffichage(); // redessine la barre d'onglets au changement d'affichage
+  useSuiviMembre(); // nouvelles décisions du bureau, pour la cloche
+  // Édition « gestion » : on ouvre directement le back office.
+  if (!AVEC_ESPACE_CLIENT) return <Redirect href="/admin" />;
   return (
     <Tabs
       screenLayout={({ children }) => <RedessinerAuTheme>{children}</RedessinerAuTheme>}

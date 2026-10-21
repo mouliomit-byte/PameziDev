@@ -70,6 +70,7 @@ export function creerApp(ctx: S.Contexte, options: Options) {
   app.get('/api/formules', async (c) => c.json(await S.formulesActives(ctx)));
   app.get('/api/centres', async (c) => c.json(await S.listerCentres(ctx)));
   app.get('/api/stats', async (c) => c.json(await S.statistiquesPubliques(ctx)));
+  app.get('/api/reglages', async (c) => c.json(await S.lireReglages(ctx)));
 
   // --- Espace membre
   app.post('/api/membres', async (c) => {
@@ -172,6 +173,12 @@ export function creerApp(ctx: S.Contexte, options: Options) {
   app.get('/api/admin/journal', async (c) => {
     await admin(c);
     return c.json(await S.listerJournal(ctx));
+  });
+
+  app.put('/api/admin/reglages', async (c) => c.json(await S.enregistrerReglages(ctx, await admin(c), await corps(c))));
+  app.get('/api/admin/notifications', async (c) => {
+    await admin(c);
+    return c.json(await S.notificationsDuBackOffice(ctx));
   });
 
   app.all('/api/*', (c) => c.json({ erreur: 'Adresse inconnue.' }, 404));

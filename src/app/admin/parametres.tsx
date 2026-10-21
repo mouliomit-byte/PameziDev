@@ -2,13 +2,14 @@ import { useState } from 'react';
 import { Text, View } from 'react-native';
 
 import { EcranAdmin } from '@/components/admin';
-import { ChoixAffichage } from '@/components/affichage';
+import { ChoixAffichage, ChoixCouleur } from '@/components/affichage';
 import { Action, Alerte, Badge, Bouton, C, Carte, Champ, Choix, s, Section } from '@/components/ui';
 import { useAdmin, useDonnees } from '@/lib/admin';
 import { api } from '@/lib/api';
 import { dateFr, fcfa } from '@/lib/data';
 import { messageErreur } from '@/lib/store';
-import type { Centre, Formule } from '@shared/regles';
+import { useAffichage } from '@/lib/theme';
+import { type Centre, type CouleurApp, type Formule, LIBELLE_COULEUR } from '@shared/regles';
 
 type Message = { texte: string; type: 'erreur' | 'succes' } | null;
 
@@ -19,6 +20,22 @@ export default function Parametres() {
   const centres = useDonnees((j) => api.admin.centres(j), []);
   const gestionnaires = useDonnees((j) => api.admin.gestionnaires(j), []);
   const [message, setMessage] = useState<Message>(null);
+  const { couleur, definirCouleur } = useAffichage();
+  const [enregistrement, setEnregistrement] = useState(false);
+
+  const changerCouleur = async (c: CouleurApp) => {
+    if (c === couleur) return;
+    setMessage(null);
+    setEnregistrement(true);
+    try {
+      const r = await avecJeton((j) => api.admin.enregistrerReglages(j, { couleur: c }));
+      definirCouleur(r.couleur); // l'écran est redessiné aux nouvelles couleurs
+    } catch (e) {
+      setMessage({ texte: messageErreur(e), type: 'erreur' });
+    } finally {
+      setEnregistrement(false);
+    }
+  };
 
   /** Exécute une action, affiche le résultat et recharge la section concernée. */
   const agir = async (f: (j: string) => Promise<unknown>, succes: string, recharger: () => Promise<void>) => {
@@ -38,9 +55,15 @@ export default function Parametres() {
     <EcranAdmin erreur={formules.erreur ?? centres.erreur ?? gestionnaires.erreur}>
       {message ? <Alerte texte={message.texte} type={message.type} /> : null}
 
-      <Section icone="contrast">Affichage</Section>
+      <Section icone="color-palette">Apparence</Section>
       <Carte>
         <ChoixAffichage />
+        <Text style={s.label}>Couleur de l’application</Text>
+        <Text style={[s.petit, { marginBottom: 12 }]}>
+          Couleur actuelle : {LIBELLE_COULEUR[couleur]}. Elle s’applique au back office et à l’application des abonnés (à leur prochaine ouverture).
+        </Text>
+        {!proprio ? <Alerte type="info" texte="Seul le propriétaire peut changer la couleur de l’application." /> : null}
+        <ChoixCouleur valeur={couleur} onChange={changerCouleur} desactive={!proprio || enregistrement} />
       </Carte>
 
       <Section icone="pricetags">Formules et cotisations</Section>

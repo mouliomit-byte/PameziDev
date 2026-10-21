@@ -1,7 +1,8 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { Link, router } from 'expo-router';
+import { router } from 'expo-router';
 import { Linking, Pressable, Text, View } from 'react-native';
 
+import { OutilsAbonne } from '@/components/notifications';
 import { Badge, Bouton, C, Carte, Degrade, Ecran, IconName, Logo, Numero, s, Section, Tricolore } from '@/components/ui';
 import {
   CONTACTS,
@@ -23,6 +24,7 @@ export default function Accueil() {
 
   return (
     <Ecran>
+      <OutilsAbonne />
       {/* En-tête */}
       <Degrade style={{ borderRadius: 24, padding: 22, marginBottom: 16 }}>
         <View style={{ position: 'absolute', right: -60, top: -60, width: 200, height: 200, borderRadius: 100, backgroundColor: C.bleuVif, opacity: 0.45 }} />
@@ -187,9 +189,6 @@ export default function Accueil() {
           Association déclarée · Récépissé n° {RECEPISSE.numero}{'\n'}
           {RECEPISSE.autorite}, {RECEPISSE.date}
         </Text>
-        <Link href="/admin" style={[s.petit, { color: C.accent, fontWeight: '700', marginTop: 6 }]}>
-          Espace gestionnaire
-        </Link>
       </View>
     </Ecran>
   );

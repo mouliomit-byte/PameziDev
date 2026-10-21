@@ -22,7 +22,7 @@ Objectif : **5 000 à 10 000 adhérents**. Convention de soins avec l'**Hôpital
 | Partie | Pour qui | Où |
 |---|---|---|
 | **Application membre** | Les adhérents | Android, iPhone, Web |
-| **Back office** (`/admin`) | Le propriétaire et les gestionnaires | Même application : Android, iPhone, Web (ordinateur) |
+| **Back office** (`/admin`) | Le propriétaire et les gestionnaires | Édition « gestion » séparée : Web (ordinateur), Android |
 | **Serveur (back-end)** | — | `server/` : API + base de données + hébergement du site Web |
 
 ### Application membre
@@ -38,7 +38,7 @@ Objectif : **5 000 à 10 000 adhérents**. Convention de soins avec l'**Hôpital
 - **Membres** : recherche, filtres, fiche complète, suspendre / réactiver / démission, changer de formule, **encaisser des espèces au bureau**, remplacer un code secret oublié, **export Excel (CSV)** aux colonnes du guide (N° d'inscription, nom, prénom, date et lieu de naissance, âge, CNI, photo CNI, téléphone…), affichage de la photo de la CNI.
 - **Cotisations** : confirmer ou rejeter les paiements en espèces déclarés.
 - **Demandes de soins** : valider, rejeter, marquer comme payée, avec commentaire.
-- **Paramètres** : formules (cotisation, taux, plafond, garanties, visibilité), centres de soins (convention signée ou non), comptes gestionnaires.
+- **Paramètres** : apparence (affichage clair/sombre, couleur de l'application parmi 6 teintes), formules (cotisation, taux, plafond, garanties, visibilité), centres de soins (convention signée ou non), comptes gestionnaires.
 - **Journal** : chaque action du back office est tracée (qui, quoi, quand).
 
 Rôles : le **propriétaire** peut tout faire ; un **gestionnaire** gère membres, cotisations, demandes et centres, mais ne modifie ni les formules ni les comptes.
@@ -81,7 +81,12 @@ EXPO_PUBLIC_API_URL=http://<adresse-du-serveur>:8787 npx expo start
 npx expo start
 ```
 
-Back office : ouvrir `/admin` (lien « Espace gestionnaire » en bas de l'accueil).
+Back office : ouvrir `/admin` (en développement, les deux espaces sont dans la même application).
+
+**Deux éditions** (variable `EXPO_PUBLIC_EDITION`) : l'application des abonnés (`client`) ne contient
+aucun accès au back office ; l'édition `gestion` n'ouvre que le back office.
+- Web : `npm run build:web` (abonnés) et `npm run build:web -- --gestion` (back office), deux sites distincts.
+- Mobile : profils EAS `preview` / `production` = abonnés ; profil `gestion` = APK du back office.
 En démonstration : `proprietaire@pamezi.cm` / `demo-pamezi`.
 
 Vérifications :

@@ -357,3 +357,108 @@ export function calculerStatistiques(
     objectif: OBJECTIF_ADHERENTS,
   };
 }
+
+// ---------------------------------------------------------------------------
+// Réglages de l'application (choisis par le propriétaire dans le back office)
+
+export const COULEURS_APP = ['bleu', 'vert', 'turquoise', 'violet', 'bordeaux', 'orange'] as const;
+export type CouleurApp = (typeof COULEURS_APP)[number];
+export const LIBELLE_COULEUR: Record<CouleurApp, string> = {
+  bleu: 'Bleu Pamezi',
+  vert: 'Vert forêt',
+  turquoise: 'Turquoise',
+  violet: 'Violet',
+  bordeaux: 'Bordeaux',
+  orange: 'Orange soleil',
+};
+export const estCouleurApp = (v: unknown): v is CouleurApp => (COULEURS_APP as readonly unknown[]).includes(v);
+
+export type Reglages = { couleur: CouleurApp };
+export const REGLAGES_DEPART: Reglages = { couleur: 'bleu' };
+
+// ---------------------------------------------------------------------------
+// Notifications (cloche) : calculées à partir des données, rien n'est stocké en plus.
+
+export type Notification = {
+  id: string;
+  date: string; // ISO
+  titre: string;
+  texte: string;
+  type: 'info' | 'succes' | 'alerte' | 'erreur';
+  /** Écran à ouvrir quand on touche la notification. */
+  lien?: string;
+};
+
+const montantFcfa = (n: number) => `${n.toLocaleString('fr-FR').replace(/\s/g, ' ')} FCFA`;
+const parDate = (a: Notification, b: Notification) => b.date.localeCompare(a.date);
+
+/** Notifications de l'abonné : adhésion, cotisations, demandes de prise en charge, retard. */
+export function notificationsMembre(p: Profil, maintenant: Date): Notification[] {
+  const n: Notification[] = [
+    {
+      id: `bienvenue-${p.membre.id}`,
+      date: p.membre.dateAdhesion,
+      titre: 'Bienvenue dans la Mutuelle Pamezi',
+      texte: `Votre numéro d'inscription : ${p.membre.numero}. Votre carte de membre est dans « Ma carte ».`,
+      type: 'info',
+      lien: '/profil',
+    },
+  ];
+  for (const c of p.cotisations) {
+    const quand = c.traiteLe ?? c.date;
+    const quoi = `${c.mois} mois · ${montantFcfa(c.montant)}`;
+    if (c.statut === 'confirmee') n.push({ id: `cot-${c.id}-ok`, date: quand, titre: 'Cotisation confirmée', texte: `${quoi} (${c.mode}). Merci !`, type: 'succes', lien: '/tontine' });
+    else if (c.statut === 'rejetee') n.push({ id: `cot-${c.id}-non`, date: quand, titre: 'Cotisation non reçue', texte: `${quoi} : le bureau n'a pas reçu ce paiement. Contactez-nous.`, type: 'erreur', lien: '/tontine' });
+    else n.push({ id: `cot-${c.id}-attente`, date: c.date, titre: 'Cotisation en attente', texte: `${quoi} : à régler au bureau Pamezi, qui confirmera la réception.`, type: 'alerte', lien: '/tontine' });
+  }
+  for (const d of p.demandes) {
+    const quand = d.traiteLe ?? d.date;
+    const quoi = `${d.motif} · ${d.centre}`;
+    const message: Record<StatutDemande, [string, Notification['type'], string]> = {
+      en_cours: ['Demande de prise en charge envoyée', 'info', `${quoi} : la mutuelle l'examine.`],
+      validee: ['Prise en charge accordée', 'succes', `${quoi} : ${montantFcfa(d.priseEnCharge)} pris en charge.`],
+      payee: ['Prise en charge payée', 'succes', `${quoi} : ${montantFcfa(d.priseEnCharge)} réglés.`],
+      rejetee: ['Demande refusée', 'erreur', `${quoi}${d.commentaire ? ` : ${d.commentaire}` : '.'}`],
+    };
+    const [titre, type, texte] = message[d.statut];
+    n.push({ id: `dem-${d.id}-${d.statut}`, date: quand, titre, texte, type, lien: '/soins' });
+  }
+  if (p.membre.statut === 'actif' && !p.situation.aJour) {
+    const retard = p.situation.moisDus - p.situation.moisPayes;
+    const debutMois = new Date(maintenant.getFullYear(), maintenant.getMonth(), 1).toISOString();
+    n.push({
+      id: `retard-${debutMois.slice(0, 7)}-${retard}`,
+      date: debutMois,
+      titre: 'Cotisation en retard',
+      texte: `${retard} mois à régler pour rester pris en charge, vous et votre famille.`,
+      type: 'alerte',
+      lien: '/cotiser',
+    });
+  }
+  if (p.membre.statut === 'suspendu')
+    n.push({ id: `suspendu-${p.membre.id}`, date: maintenant.toISOString().slice(0, 10), titre: 'Adhésion suspendue', texte: 'Contactez le bureau de la mutuelle pour la réactiver.', type: 'erreur', lien: '/profil' });
+  return n.sort(parDate);
+}
+
+/** Notifications du back office : adhésions récentes, cotisations à confirmer, demandes à traiter. */
+export function notificationsAdmin(
+  membres: Membre[],
+  cotisations: Cotisation[],
+  demandes: Demande[],
+  maintenant: Date,
+  joursAdhesions = 30,
+): Notification[] {
+  const nom = new Map(membres.map((m) => [m.id, `${nomComplet(m)} (${m.numero})`]));
+  const depuis = new Date(maintenant.getTime() - joursAdhesions * 86_400_000).toISOString();
+  const n: Notification[] = [];
+  for (const m of membres)
+    if (m.dateAdhesion >= depuis.slice(0, m.dateAdhesion.length))
+      n.push({ id: `adh-${m.id}`, date: m.dateAdhesion, titre: 'Nouvelle adhésion', texte: `${nomComplet(m)} · ${m.numero} · ${m.localite}`, type: 'info', lien: `/admin/membre/${m.id}` });
+  for (const c of cotisations)
+    if (c.statut === 'en_attente')
+      n.push({ id: `cot-${c.id}`, date: c.date, titre: 'Cotisation à confirmer', texte: `${nom.get(c.membreId) ?? 'Membre'} · ${montantFcfa(c.montant)} en espèces`, type: 'alerte', lien: '/admin/cotisations' });
+  for (const d of demandes)
+    if (d.statut === 'en_cours')
+      n.push({ id: `dem-${d.id}`, date: d.date, titre: 'Demande de prise en charge', texte: `${nom.get(d.membreId) ?? 'Membre'} · ${d.motif} · ${montantFcfa(d.montant)}`, type: 'alerte', lien: '/admin/demandes' });
+  return n.sort(parDate).slice(0, 60);
+}

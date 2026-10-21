@@ -2,6 +2,7 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { router } from 'expo-router';
 import { Share, Text, View } from 'react-native';
 
+import { OutilsAbonne } from '@/components/notifications';
 import { Badge, Bouton, C, Carte, Degrade, Ecran, Ligne, s, Section, Titre, Vide } from '@/components/ui';
 import { CONTACTS, dateFr, fcfa, nombre, OBJECTIF_ADHERENTS, SLOGAN, SOLIDARITE } from '@/lib/data';
 import { useActualiserAuFocus, usePamezi } from '@/lib/store';
@@ -14,6 +15,7 @@ export default function Tontine() {
   if (!membre || !formule) {
     return (
       <Ecran>
+        <OutilsAbonne />
         <Titre sous={SOLIDARITE}>Tontine santé</Titre>
         <Vide icone="people" texte="Adhérez à la Mutuelle de Santé Pamezi pour participer à la tontine pour la santé.">
           <Bouton titre="Adhérer" icone="person-add" onPress={() => router.push('/adhesion')} />
@@ -37,6 +39,7 @@ export default function Tontine() {
 
   return (
     <Ecran>
+      <OutilsAbonne />
       <Titre sous={SOLIDARITE}>Tontine santé</Titre>
 
       <Degrade style={{ borderRadius: 22, padding: 20, marginBottom: 14 }}>

@@ -15,7 +15,12 @@ const FICHIER = BACK_OFFICE ? 'pamezi-back-office.html' : 'pamezi-app.html';
 const MIME = { '.png': 'image/png', '.ttf': 'font/ttf', '.jpg': 'image/jpeg', '.svg': 'image/svg+xml' };
 
 // L'artefact ne peut joindre aucun serveur : il est toujours construit en mode démonstration.
-const env = { ...process.env, EXPO_PUBLIC_API_URL: '' }; // vide : l'emporte sur .env.production
+const env = {
+  ...process.env,
+  EXPO_PUBLIC_API_URL: '', // vide : l'emporte sur .env.production
+  // L'application des abonnés ne contient pas le back office, et inversement.
+  EXPO_PUBLIC_EDITION: BACK_OFFICE ? 'gestion' : 'client',
+};
 execSync('npx expo export --platform web --clear', { stdio: 'inherit', env });
 
 const html = fs.readFileSync(path.join(DIST, 'index.html'), 'utf8');
@@ -39,7 +44,7 @@ js = js.replace(/<\/script/gi, '<\\/script');
 const page = `<title>${TITRE}</title>
 <meta name="theme-color" content="#0070C6">
 <style>
-  :root { --fond: #F5FAFE; color-scheme: light dark; }
+  :root { --fond: #E8EEF4; color-scheme: light dark; }
   @media (prefers-color-scheme: dark) { :root { --fond: #0A1520; } }
   html, body { height: 100%; }
   body { background: var(--fond); overflow: hidden; }

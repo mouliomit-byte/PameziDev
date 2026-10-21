@@ -220,6 +220,29 @@ describe('back office', () => {
     assert.ok(j.json.some((e: any) => e.action === 'Prise en charge payée'));
   });
 
+  test('couleur de l’application : publique, modifiable par le propriétaire seulement', async () => {
+    assert.deepEqual((await appel('GET', '/api/reglages')).json, { couleur: 'bleu' });
+    assert.equal((await appel('PUT', '/api/admin/reglages', { couleur: 'violet' })).statut, 401);
+    assert.equal((await appel('PUT', '/api/admin/reglages', { couleur: 'rose-fluo' }, jetonProprio)).statut, 400);
+    const r = await appel('PUT', '/api/admin/reglages', { couleur: 'violet' }, jetonProprio);
+    assert.equal(r.statut, 200);
+    assert.deepEqual((await appel('GET', '/api/reglages')).json, { couleur: 'violet' });
+    assert.equal((await appel('PUT', '/api/admin/reglages', { couleur: 'bleu' }, jetonProprio)).statut, 200);
+  });
+
+  test('notifications du back office et de l’abonné', async () => {
+    assert.equal((await appel('GET', '/api/admin/notifications', undefined, jetonMembre)).statut, 401);
+    const r = await appel('GET', '/api/admin/notifications', undefined, jetonProprio);
+    assert.equal(r.statut, 200);
+    assert.ok(r.json.some((n: any) => n.titre === 'Nouvelle adhésion' && n.lien === `/admin/membre/${membreId}`));
+    const { notificationsMembre } = await import('../../shared/regles.ts');
+    const profil = (await appel('GET', '/api/moi', undefined, jetonMembre)).json;
+    const n = notificationsMembre(profil, new Date());
+    assert.ok(n.some((x) => x.titre === 'Bienvenue dans la Mutuelle Pamezi'));
+    assert.ok(n.some((x) => x.titre === 'Cotisation confirmée'));
+    assert.ok(n.some((x) => x.lien === '/soins'));
+  });
+
   test('trop de tentatives de connexion : blocage', async () => {
     let dernier = 0;
     for (let i = 0; i < 11; i++) dernier = (await appel('POST', '/api/admin/connexion', { email: 'x@pamezi.cm', motDePasse: 'mauvais' })).statut;

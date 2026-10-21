@@ -15,6 +15,7 @@ const INDEX: Record<keyof Depot, string[]> = {
   admins: ['email'],
   journal: ['date'],
   pieces: [],
+  reglages: [],
 };
 
 const NOM_SUR = /^[a-zA-Z]+$/;

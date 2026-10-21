@@ -11,7 +11,9 @@ import {
   type Formule,
   type Membre,
   type ModePaiement,
+  type Notification,
   type Profil,
+  type Reglages,
   type RoleAdmin,
   type StatutCotisation,
   type StatutDemande,
@@ -24,14 +26,18 @@ import {
   CENTRES_DEPART,
   construireProfil,
   ErreurMetier,
+  estCouleurApp,
   FORMULES_DEPART,
   formaterDate,
+  LIBELLE_COULEUR,
   lireDateNaissance,
   MODES_PAIEMENT,
   MOTIFS,
   nomComplet,
   normaliserCni,
   normaliserTelephone,
+  notificationsAdmin,
+  REGLAGES_DEPART,
   numeroMembre,
   prisEnChargeAnnee,
   telephoneValide,
@@ -41,6 +47,8 @@ export type MembreStocke = Membre & { pinHash: string };
 export type AdminStocke = Admin & { motDePasseHash: string };
 /** Photo ou scan de la CNI, rangée à part (id = id du membre) pour garder les listes légères. */
 export type PieceIdentite = { id: string; cniPhoto: string; ajouteLe: string };
+
+export type ReglagesStockes = Reglages & { id: string; misAJourLe?: string; misAJourPar?: string };
 
 export interface Collection<T extends { id: string }> {
   tous(): Promise<T[]>;
@@ -61,6 +69,8 @@ export interface Depot {
   admins: Collection<AdminStocke>;
   journal: Collection<EntreeJournal>;
   pieces: Collection<PieceIdentite>;
+  /** Un seul document, id « app ». */
+  reglages: Collection<ReglagesStockes>;
 }
 
 export interface Secrets {
@@ -551,3 +561,30 @@ export async function pieceIdentite(ctx: Contexte, membreId: string): Promise<{ 
 }
 
 export { prisEnChargeAnnee };
+
+// ---------------------------------------------------------------------------
+// Réglages et notifications
+
+export async function lireReglages(ctx: Contexte): Promise<Reglages> {
+  const r = await ctx.depot.reglages.parId('app');
+  return { couleur: estCouleurApp(r?.couleur) ? r.couleur : REGLAGES_DEPART.couleur };
+}
+
+export async function enregistrerReglages(ctx: Contexte, admin: Admin, d: Partial<Reglages>): Promise<Reglages> {
+  exigerProprietaire(admin);
+  exiger(estCouleurApp(d.couleur), 'Couleur inconnue.');
+  const valeurs: ReglagesStockes = { id: 'app', couleur: d.couleur, misAJourLe: ctx.maintenant().toISOString(), misAJourPar: admin.nom };
+  if (await ctx.depot.reglages.parId('app')) await ctx.depot.reglages.modifier('app', valeurs);
+  else await ctx.depot.reglages.inserer(valeurs);
+  await tracer(ctx, admin, 'Couleur de l’application modifiée', LIBELLE_COULEUR[d.couleur]);
+  return lireReglages(ctx);
+}
+
+export async function notificationsDuBackOffice(ctx: Contexte): Promise<Notification[]> {
+  const [membres, cotisations, demandes] = await Promise.all([
+    ctx.depot.membres.tous(),
+    ctx.depot.cotisations.trouver('statut', 'en_attente'),
+    ctx.depot.demandes.trouver('statut', 'en_cours'),
+  ]);
+  return notificationsAdmin(membres.map(membrePublic), cotisations, demandes, ctx.maintenant());
+}

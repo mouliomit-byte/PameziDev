@@ -5,6 +5,8 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Svg, { Circle, Defs, LinearGradient as SvgGradient, Path, Stop } from 'react-native-svg';
 
+import type { CouleurApp } from '@shared/regles';
+
 // Couleurs relevées sur l'affiche officielle de la Mutuelle de Santé Pamezi.
 const CLAIR = {
   bleu: '#0070C6', // bandeaux, boutons et cercles d'icônes
@@ -12,7 +14,7 @@ const CLAIR = {
   bleuVif: '#1580DB', // pastilles de titres, haut des dégradés
   bleuFonce: '#0B59A3', // titres (« MUTUELLE DE SANTÉ PAMEZI »)
   bleuNuit: '#084A88', // bas des dégradés
-  bleuClair: '#E6F3FC', // fonds de pastilles
+  bleuClair: '#DCEAF6', // fonds de pastilles
   bleuPale: '#C6E6F9', // vagues bleu ciel, textes sur bleu
   vert: '#007A5E', // drapeau du Cameroun
   vertClair: '#E3F4EA',
@@ -22,10 +24,12 @@ const CLAIR = {
   texte: '#123A61', // texte bleu profond, comme sur l'affiche
   gris: '#56708C',
   indice: '#98A6B8', // texte d'exemple des champs
-  bord: '#D6E6F4',
-  fond: '#F5FAFE',
-  surface: '#FFFFFF', // cartes, champs
+  // Fond et cartes adoucis (gris bleuté, blanc cassé) : pas de blanc pur qui éblouit.
+  bord: '#CCDAE7',
+  fond: '#E8EEF4',
+  surface: '#F6F8FA', // cartes, champs
   blanc: '#FFFFFF', // texte sur fond bleu
+  encre: '#0B59A3', // texte foncé sur bouton blanc (bandeaux)
   degrade: ['#1580DB', '#0070C6', '#084A88'] as [string, string, string],
 };
 
@@ -50,14 +54,76 @@ const SOMBRE: typeof CLAIR = {
   fond: '#0A1520',
   surface: '#122334',
   blanc: '#FFFFFF',
+  encre: '#0B59A3',
   degrade: ['#1668B5', '#0E5698', '#07335F'],
 };
 
 export type Theme = 'clair' | 'sombre';
 
-/** Palette courante (modifiée sur place quand on change d'affichage). */
+/**
+ * Teintes de marque possibles (choisies par le propriétaire dans le back office).
+ * Les noms des jetons (« bleu », « bleuFonce »…) restent ceux de la teinte d'origine.
+ */
+export const TEINTES: Record<CouleurApp, { principal: string; vif: string; fonce: string; nuit: string; clair: string; pale: string }> = {
+  bleu: { principal: '#0070C6', vif: '#1580DB', fonce: '#0B59A3', nuit: '#084A88', clair: '#E6F3FC', pale: '#C6E6F9' },
+  vert: { principal: '#00795C', vif: '#14946F', fonce: '#00634B', nuit: '#004737', clair: '#E1F3ED', pale: '#BFE9DB' },
+  turquoise: { principal: '#00788A', vif: '#0E93A6', fonce: '#00626F', nuit: '#00474F', clair: '#DFF2F4', pale: '#BCE7EC' },
+  violet: { principal: '#6A3FB5', vif: '#7F55CC', fonce: '#57329A', nuit: '#3E2273', clair: '#EFE9FA', pale: '#DACDF3' },
+  bordeaux: { principal: '#A3123A', vif: '#C21F4B', fonce: '#86102F', nuit: '#5E0A21', clair: '#FBE7EC', pale: '#F6C9D5' },
+  orange: { principal: '#B85400', vif: '#D86E0E', fonce: '#994600', nuit: '#6E3200', clair: '#FDEEDF', pale: '#FAD8B5' },
+};
+
+/** Mélange deux couleurs #RRGGBB (t = part de la seconde). */
+function melanger(a: string, b: string, t: number) {
+  const x = (h: string, i: number) => parseInt(h.slice(1 + 2 * i, 3 + 2 * i), 16);
+  return `#${[0, 1, 2].map((i) => Math.round(x(a, i) * (1 - t) + x(b, i) * t).toString(16).padStart(2, '0')).join('')}`.toUpperCase();
+}
+
+function palette(theme: Theme, couleur: CouleurApp): typeof CLAIR {
+  if (couleur === 'bleu') return theme === 'sombre' ? SOMBRE : CLAIR; // teinte de l'affiche, réglée à la main
+  const p = TEINTES[couleur];
+  if (theme === 'clair')
+    return {
+      ...CLAIR,
+      bleu: p.principal,
+      accent: p.principal,
+      bleuVif: p.vif,
+      bleuFonce: p.fonce,
+      bleuNuit: p.nuit,
+      bleuClair: melanger(p.clair, '#D5DDE5', 0.25),
+      bleuPale: p.pale,
+      encre: p.fonce,
+      texte: melanger(p.nuit, '#1A1F26', 0.45),
+      gris: melanger(p.principal, '#5F6B78', 0.78),
+      bord: melanger(p.principal, '#D2DAE2', 0.85),
+      fond: melanger(p.clair, '#E6EBF0', 0.6),
+      degrade: [p.vif, p.principal, p.nuit],
+    };
+  const nuit = '#0A0D12';
+  return {
+    ...SOMBRE,
+    bleu: melanger(p.principal, '#FFFFFF', 0.08),
+    accent: melanger(p.principal, '#FFFFFF', 0.45),
+    bleuVif: melanger(p.vif, '#FFFFFF', 0.08),
+    bleuFonce: melanger(p.principal, '#FFFFFF', 0.6),
+    bleuNuit: p.nuit,
+    bleuClair: melanger(p.principal, nuit, 0.7),
+    bleuPale: p.pale,
+    encre: p.fonce,
+    texte: melanger(p.pale, '#FFFFFF', 0.6),
+    gris: melanger(p.principal, '#A5AEB8', 0.75),
+    indice: melanger(p.principal, '#6F7882', 0.8),
+    bord: melanger(p.principal, nuit, 0.7),
+    fond: melanger(p.principal, nuit, 0.92),
+    surface: melanger(p.principal, nuit, 0.84),
+    degrade: [melanger(p.vif, '#000000', 0.15), melanger(p.principal, '#000000', 0.22), melanger(p.nuit, '#000000', 0.3)],
+  };
+}
+
+/** Palette courante (modifiée sur place quand on change d'affichage ou de couleur). */
 export const C = { ...CLAIR };
 let themeActif: Theme = 'clair';
+let couleurActive: CouleurApp = 'bleu';
 export const themeCourant = () => themeActif;
 
 export type IconName = keyof typeof Ionicons.glyphMap;
@@ -171,7 +237,7 @@ export function Bouton({
   const styles = {
     plein: { fond: C.bleu, bord: C.bleu, encre: C.blanc },
     contour: { fond: 'transparent', bord: C.accent, encre: C.accent },
-    blanc: { fond: '#FFFFFF', bord: '#FFFFFF', encre: '#0B59A3' }, // sur les bandeaux bleus
+    blanc: { fond: '#FFFFFF', bord: '#FFFFFF', encre: C.encre }, // sur les bandeaux bleus
     danger: { fond: C.rouge, bord: C.rouge, encre: C.blanc },
   }[variante];
   return (
@@ -349,10 +415,11 @@ const creerStyles = () => StyleSheet.create({
 export const s = creerStyles();
 
 /** Passe toute l'interface en clair ou en sombre ; les écrans sont ensuite redessinés (voir lib/theme). */
-export function appliquerTheme(theme: Theme) {
-  if (theme === themeActif) return;
+export function appliquerTheme(theme: Theme, couleur: CouleurApp = couleurActive) {
+  if (theme === themeActif && couleur === couleurActive) return;
   themeActif = theme;
-  Object.assign(C, theme === 'sombre' ? SOMBRE : CLAIR);
+  couleurActive = couleur;
+  Object.assign(C, palette(theme, couleur));
   Object.assign(s, creerStyles());
 }
 
