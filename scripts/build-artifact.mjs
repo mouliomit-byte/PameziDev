@@ -1,12 +1,17 @@
 // Construit une version « fichier unique » de l'application Web (dist-artifact/pamezi-app.html),
 // sans aucun fichier externe : scripts, police et images sont intégrés dans la page.
-// Utilisation : npm run build:artifact
+// Utilisation : npm run build:artifact            (application membre)
+//               npm run build:artifact -- --back-office  (s'ouvre sur le back office)
 import { execSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
 
 const DIST = 'dist';
 const OUT_DIR = 'dist-artifact';
+const BACK_OFFICE = process.argv.includes('--back-office');
+const ROUTE = BACK_OFFICE ? '/admin' : '/';
+const TITRE = BACK_OFFICE ? 'Back office Pamezi' : 'Application Pamezi';
+const FICHIER = BACK_OFFICE ? 'pamezi-back-office.html' : 'pamezi-app.html';
 const MIME = { '.png': 'image/png', '.ttf': 'font/ttf', '.jpg': 'image/jpeg', '.svg': 'image/svg+xml' };
 
 // L'artefact ne peut joindre aucun serveur : il est toujours construit en mode démonstration.
@@ -32,7 +37,7 @@ js = js.replace(/"(\/assets\/[^"]+\.(png|ttf|jpg|svg))"/g, (_, p) => {
 });
 js = js.replace(/<\/script/gi, '<\\/script');
 
-const page = `<title>Application Pamezi</title>
+const page = `<title>${TITRE}</title>
 <meta name="theme-color" content="#0070C6">
 <style>
   :root { --fond: #F5FAFE; color-scheme: light; }
@@ -42,8 +47,8 @@ const page = `<title>Application Pamezi</title>
 </style>
 <div id="root"></div>
 <script>
-  // L'application démarre toujours sur l'accueil, quelle que soit l'adresse de la page.
-  try { if (location.pathname !== '/') history.replaceState(null, '', '/'); } catch (e) {}
+  // L'application démarre toujours sur le même écran, quelle que soit l'adresse de la page.
+  try { if (location.pathname !== '${ROUTE}') history.replaceState(null, '', '${ROUTE}'); } catch (e) {}
 </script>
 <script>
 ${js}
@@ -51,5 +56,5 @@ ${js}
 `;
 
 fs.mkdirSync(OUT_DIR, { recursive: true });
-fs.writeFileSync(path.join(OUT_DIR, 'pamezi-app.html'), page);
-console.log(`${OUT_DIR}/pamezi-app.html : ${(page.length / 1e6).toFixed(2)} Mo`);
+fs.writeFileSync(path.join(OUT_DIR, FICHIER), page);
+console.log(`${OUT_DIR}/${FICHIER} : ${(page.length / 1e6).toFixed(2)} Mo`);
