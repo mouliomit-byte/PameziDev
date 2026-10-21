@@ -5,7 +5,7 @@ import { Text, View } from 'react-native';
 import { Bouton, C, Carte, Degrade, Ecran, Ligne, Logo, s, Section, Titre, Tricolore, Vide } from '@/components/ui';
 import { CONTACTS, dateFr, SLOGAN } from '@/lib/data';
 import { useActualiserAuFocus, usePamezi } from '@/lib/store';
-import { formaterTelephone, LIBELLE_STATUT_MEMBRE } from '@shared/regles';
+import { formaterTelephone, LIBELLE_STATUT_MEMBRE, nomComplet } from '@shared/regles';
 
 export default function Profil() {
   const { membre, formule, situation: sit, deconnecter } = usePamezi();
@@ -40,7 +40,7 @@ export default function Profil() {
               <Text style={{ color: C.blanc, fontSize: 16, fontWeight: '900' }}>Mutuelle de Santé Pamezi</Text>
             </View>
           </View>
-          <Text style={{ color: C.blanc, fontSize: 23, fontWeight: '900', marginTop: 24 }}>{membre.nom}</Text>
+          <Text style={{ color: C.blanc, fontSize: 23, fontWeight: '900', marginTop: 24 }}>{nomComplet(membre)}</Text>
           <Text style={{ color: C.jaune, fontSize: 18, fontWeight: '800', letterSpacing: 2.5, marginTop: 4 }}>{membre.numero}</Text>
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 20 }}>
             <Info titre="FORMULE" valeur={formule.nom} />

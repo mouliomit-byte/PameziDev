@@ -11,8 +11,13 @@ export type RoleAdmin = 'proprietaire' | 'gestionnaire';
 
 export type Membre = {
   id: string;
-  numero: string;
-  nom: string;
+  numero: string; // N° d'inscription
+  nom: string; // nom de famille
+  prenom: string;
+  dateNaissance: string; // AAAA-MM-JJ
+  lieuNaissance: string;
+  cni: string; // numéro de la carte nationale d'identité
+  pieceCni: boolean; // photo ou scan de la CNI fourni
   telephone: string; // 9 chiffres, sans indicatif
   localite: string;
   typeAdhesion: TypeAdhesion;
@@ -196,6 +201,41 @@ export function telephoneValide(tel: string): boolean {
 export function formaterTelephone(tel: string): string {
   return `+237 ${tel.replace(/(\d)(\d{2})(\d{2})(\d{2})(\d{2})/, '$1 $2 $3 $4 $5')}`;
 }
+
+/** « Nom Prénom », dans l'ordre du guide des procédures. */
+export function nomComplet(m: { nom: string; prenom?: string }): string {
+  return [m.nom, m.prenom].filter(Boolean).join(' ');
+}
+
+/** « 25/07/1985 » → « 1985-07-25 » ; null si la date n'existe pas. */
+export function lireDateNaissance(saisie: string): string | null {
+  const m = /^\s*(\d{1,2})[/.-](\d{1,2})[/.-](\d{4})\s*$/.exec(String(saisie ?? ''));
+  if (!m) return /^\d{4}-\d{2}-\d{2}$/.test(String(saisie)) && !isNaN(Date.parse(saisie)) ? saisie : null;
+  const [j, mo, a] = [Number(m[1]), Number(m[2]), Number(m[3])];
+  const d = new Date(Date.UTC(a, mo - 1, j));
+  if (d.getUTCFullYear() !== a || d.getUTCMonth() !== mo - 1 || d.getUTCDate() !== j) return null;
+  return `${a}-${String(mo).padStart(2, '0')}-${String(j).padStart(2, '0')}`;
+}
+
+/** Âge révolu à la date donnée. */
+export function calculerAge(dateNaissance: string, maintenant: Date): number {
+  const [a, m, j] = dateNaissance.split('-').map(Number);
+  let age = maintenant.getFullYear() - a;
+  if (maintenant.getMonth() + 1 < m || (maintenant.getMonth() + 1 === m && maintenant.getDate() < j)) age--;
+  return age;
+}
+
+export function formaterDate(iso: string): string {
+  const [a, m, j] = iso.slice(0, 10).split('-');
+  return `${j}/${m}/${a}`;
+}
+
+/** Numéro de CNI : lettres et chiffres, sans espaces. */
+export function normaliserCni(saisie: string): string {
+  return String(saisie ?? '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+}
+
+export const AGE_MINIMUM = 18;
 
 export function numeroMembre(annee: number, rang: number): string {
   return `PMZ-${annee}-${String(rang).padStart(5, '0')}`;

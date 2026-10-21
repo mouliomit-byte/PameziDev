@@ -7,13 +7,14 @@ import { DatabaseSync } from 'node:sqlite';
 import type { Collection, Depot } from '../../shared/service.ts';
 
 const INDEX: Record<keyof Depot, string[]> = {
-  membres: ['telephone', 'numero', 'statut'],
+  membres: ['telephone', 'numero', 'statut', 'cni'],
   cotisations: ['membreId', 'statut'],
   demandes: ['membreId', 'statut'],
   formules: [],
   centres: [],
   admins: ['email'],
   journal: ['date'],
+  pieces: [],
 };
 
 const NOM_SUR = /^[a-zA-Z]+$/;
@@ -24,6 +25,11 @@ export function ouvrirBase(chemin: string): DatabaseSync {
   for (const [table, champs] of Object.entries(INDEX)) {
     const colonnes = champs.map((c) => `, ${c} TEXT GENERATED ALWAYS AS (json_extract(data, '$.${c}')) VIRTUAL`).join('');
     db.exec(`CREATE TABLE IF NOT EXISTS ${table} (id TEXT PRIMARY KEY, data TEXT NOT NULL${colonnes})`);
+    // Base créée par une version précédente : ajoute les colonnes indexées manquantes.
+    const existantes = new Set((db.prepare(`PRAGMA table_xinfo(${table})`).all() as { name: string }[]).map((c) => c.name));
+    for (const c of champs) {
+      if (!existantes.has(c)) db.exec(`ALTER TABLE ${table} ADD COLUMN ${c} TEXT GENERATED ALWAYS AS (json_extract(data, '$.${c}')) VIRTUAL`);
+    }
     for (const c of champs) db.exec(`CREATE INDEX IF NOT EXISTS ${table}_${c} ON ${table}(${c})`);
   }
   return db;

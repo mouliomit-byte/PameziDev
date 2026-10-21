@@ -9,9 +9,10 @@ import { ErreurMetier, type ModePaiement } from '@shared/regles';
 import * as S from '@shared/service';
 
 import type { Api } from './api';
+import { SPECIMEN_CNI } from './specimen-cni';
 import { ErreurApi } from './erreurs';
 
-const CLE = 'pamezi:demo:v1';
+const CLE = 'pamezi:demo:v2'; // v2 : identité complète (nom, prénom, naissance, CNI)
 export const DEMO_ADMIN = { email: 'proprietaire@pamezi.cm', motDePasse: 'demo-pamezi' };
 
 // Les codes secrets ne protègent rien en démonstration : simple empreinte non cryptographique.
@@ -27,13 +28,13 @@ const secretsDemo: S.Secrets = {
 };
 
 // Membres d'exemple (fictifs) pour que le back office montre quelque chose dès l'ouverture.
-const EXEMPLES: { nom: string; tel: string; localite: string; formuleId: string; ayants: number; ilYa: number; mois: number[]; asso?: string }[] = [
-  { nom: 'Mfondi Ibrahim', tel: '670000101', localite: 'Foumban', formuleId: 'famille', ayants: 5, ilYa: 4, mois: [3, 2] },
-  { nom: 'Njoya Mariama', tel: '670000102', localite: 'Foumbot', formuleId: 'essentiel', ayants: 0, ilYa: 3, mois: [4] },
-  { nom: 'Pefoura Abdou', tel: '670000103', localite: 'Koutaba', formuleId: 'serenite', ayants: 6, ilYa: 2, mois: [3] },
-  { nom: 'Mbouombouo Fadimatou', tel: '670000104', localite: 'Njimom', formuleId: 'famille', ayants: 3, ilYa: 2, mois: [3], asso: 'Association des femmes de Njimom' },
-  { nom: 'Nchare Salifou', tel: '670000105', localite: 'Massangam', formuleId: 'essentiel', ayants: 0, ilYa: 1, mois: [1] },
-  { nom: 'Mounpain Awa', tel: '670000106', localite: 'Malantouen', formuleId: 'famille', ayants: 4, ilYa: 0, mois: [] },
+const EXEMPLES: { nom: string; prenom: string; ne: string; lieu: string; tel: string; localite: string; formuleId: string; ayants: number; ilYa: number; mois: number[]; asso?: string }[] = [
+  { nom: 'Mfondi', prenom: 'Ibrahim', ne: '12/03/1978', lieu: 'Foumban', tel: '670000101', localite: 'Foumban', formuleId: 'famille', ayants: 5, ilYa: 4, mois: [3, 2] },
+  { nom: 'Njoya', prenom: 'Mariama', ne: '04/11/1990', lieu: 'Foumbot', tel: '670000102', localite: 'Foumbot', formuleId: 'essentiel', ayants: 0, ilYa: 3, mois: [4] },
+  { nom: 'Pefoura', prenom: 'Abdou', ne: '21/06/1969', lieu: 'Koutaba', tel: '670000103', localite: 'Koutaba', formuleId: 'serenite', ayants: 6, ilYa: 2, mois: [3] },
+  { nom: 'Mbouombouo', prenom: 'Fadimatou', ne: '09/09/1985', lieu: 'Njimom', tel: '670000104', localite: 'Njimom', formuleId: 'famille', ayants: 3, ilYa: 2, mois: [3], asso: 'Association des femmes de Njimom' },
+  { nom: 'Nchare', prenom: 'Salifou', ne: '30/01/1995', lieu: 'Massangam', tel: '670000105', localite: 'Massangam', formuleId: 'essentiel', ayants: 0, ilYa: 1, mois: [1] },
+  { nom: 'Mounpain', prenom: 'Awa', ne: '17/05/1988', lieu: 'Malantouen', tel: '670000106', localite: 'Malantouen', formuleId: 'famille', ayants: 4, ilYa: 0, mois: [] },
 ];
 
 async function amorcer(ctx: S.Contexte) {
@@ -45,6 +46,11 @@ async function amorcer(ctx: S.Contexte) {
     const passe = { ...ctx, maintenant: () => date };
     const p = await S.adherer(passe, {
       nom: e.nom,
+      prenom: e.prenom,
+      dateNaissance: e.ne,
+      lieuNaissance: e.lieu,
+      cni: `10${e.tel.slice(-7)}`,
+      cniPhoto: SPECIMEN_CNI,
       telephone: e.tel,
       localite: e.localite,
       typeAdhesion: e.asso ? 'Via une association' : 'Individuelle',
@@ -143,6 +149,10 @@ export function creerApiDemo(): Api {
       membre: (j, id) => executer(async (c) => {
         await admin(c, j);
         return S.profil(c, id);
+      }),
+      pieceIdentite: (j, id) => executer(async (c) => {
+        await admin(c, j);
+        return S.pieceIdentite(c, id);
       }),
       modifierMembre: (j, id, champs) => executer(async (c) => S.modifierMembre(c, await admin(c, j), id, champs)),
       reinitialiserPin: (j, id, pin) => executer(async (c) => S.reinitialiserPin(c, await admin(c, j), id, pin)),

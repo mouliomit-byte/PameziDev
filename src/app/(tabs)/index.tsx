@@ -49,7 +49,7 @@ export default function Accueil() {
       {membre && formule ? (
         <Carte>
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-            <Text style={[s.h2, { marginBottom: 0 }]}>Bonjour {membre.nom.split(' ')[0]}</Text>
+            <Text style={[s.h2, { marginBottom: 0 }]}>Bonjour {membre.prenom || membre.nom}</Text>
             <Badge texte={sit.aJour ? 'Couvert' : 'À régulariser'} couleur={sit.aJour ? C.vert : C.rouge} />
           </View>
           <Text style={[s.petit, { marginTop: 4 }]}>

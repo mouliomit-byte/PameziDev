@@ -1,6 +1,6 @@
 import { useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
-import { Text, View } from 'react-native';
+import { Image, Text, View } from 'react-native';
 
 import { EcranAdmin } from '@/components/admin';
 import { Action, Alerte, Badge, Bouton, C, Carte, Champ, Choix, Ligne, s, Section } from '@/components/ui';
@@ -9,10 +9,13 @@ import { api } from '@/lib/api';
 import { dateFr, fcfa } from '@/lib/data';
 import { messageErreur } from '@/lib/store';
 import {
+  calculerAge,
+  formaterDate,
   formaterTelephone,
   LIBELLE_STATUT_COTISATION,
   LIBELLE_STATUT_DEMANDE,
   LIBELLE_STATUT_MEMBRE,
+  nomComplet,
   type StatutMembre,
 } from '@shared/regles';
 
@@ -27,6 +30,16 @@ export default function FicheMembre() {
   const [mois, setMois] = useState<(typeof DUREES)[number]>('1');
   const [pin, setPin] = useState('');
   const [occupe, setOccupe] = useState(false);
+  const [photo, setPhoto] = useState<string | null | undefined>(undefined);
+
+  const afficherPiece = async () => {
+    setMessage(null);
+    try {
+      setPhoto((await avecJeton((j) => api.admin.pieceIdentite(j, id))).cniPhoto);
+    } catch (e) {
+      setMessage({ texte: messageErreur(e), type: 'erreur' });
+    }
+  };
 
   const agir = async (f: (j: string) => Promise<unknown>, succes: string) => {
     setOccupe(true);
@@ -51,7 +64,7 @@ export default function FicheMembre() {
       <Carte>
         <View style={{ flexDirection: 'row', justifyContent: 'space-between', gap: 8, flexWrap: 'wrap' }}>
           <View style={{ flexShrink: 1 }}>
-            <Text style={s.titre}>{m.nom}</Text>
+            <Text style={s.titre}>{nomComplet(m)}</Text>
             <Text style={[s.texte, { color: C.bleu, fontWeight: '800', letterSpacing: 1 }]}>{m.numero}</Text>
           </View>
           <View style={{ gap: 6, alignItems: 'flex-end' }}>
@@ -59,17 +72,45 @@ export default function FicheMembre() {
             <Badge texte={p.situation.aJour ? 'À jour' : `${p.situation.moisDus - p.situation.moisPayes} mois de retard`} couleur={p.situation.aJour ? C.vert : '#B7791F'} />
           </View>
         </View>
+        <Ligne
+          icone="calendar-clear"
+          gauche="Date de naissance"
+          droite={m.dateNaissance ? `${formaterDate(m.dateNaissance)} · ${calculerAge(m.dateNaissance, new Date())} ans` : '—'}
+        />
+        <Ligne icone="navigate" gauche="Lieu de naissance" droite={m.lieuNaissance || '—'} />
+        <Ligne icone="id-card" gauche="N° CNI" droite={m.cni || '—'} />
         <Ligne icone="call" gauche="Téléphone" droite={formaterTelephone(m.telephone)} />
         <Ligne icone="location" gauche="Localité" droite={m.localite} />
         <Ligne icone="people-circle" gauche="Adhésion" droite={m.association ?? m.typeAdhesion} />
         <Ligne icone="pricetags" gauche="Formule" droite={p.formule ? `${p.formule.nom} · ${fcfa(p.formule.cotisation)}/mois` : '—'} />
         <Ligne icone="people" gauche="Ayants droit" droite={String(m.ayantsDroit)} />
-        <Ligne icone="calendar" gauche="Membre depuis" droite={dateFr(m.dateAdhesion)} />
+        <Ligne icone="calendar" gauche="Date d’inscription" droite={dateFr(m.dateAdhesion)} />
         <Ligne icone="wallet" gauche="Total cotisé" droite={fcfa(p.totalCotise)} />
         <Ligne icone="medkit" gauche="Pris en charge" droite={`${fcfa(p.totalPrisEnCharge)} · reste ${fcfa(p.plafondRestant)}`} />
       </Carte>
 
       {message ? <Alerte texte={message.texte} type={message.type} /> : null}
+
+      <Carte>
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+          <Text style={[s.h2, { marginBottom: 0 }]}>Pièce d’identité (CNI)</Text>
+          {m.pieceCni ? (
+            <Action titre={photo === undefined ? 'Afficher la photo' : 'Masquer'} onPress={() => (photo === undefined ? afficherPiece() : setPhoto(undefined))} />
+          ) : (
+            <Badge texte="Non fournie" couleur={C.rouge} />
+          )}
+        </View>
+        {photo ? (
+          <Image
+            source={{ uri: photo }}
+            accessibilityLabel={`Carte d’identité de ${nomComplet(m)}`}
+            style={{ width: '100%', maxWidth: 520, aspectRatio: 1.6, marginTop: 12, borderRadius: 12, backgroundColor: C.bleuClair }}
+            resizeMode="contain"
+          />
+        ) : photo === null ? (
+          <Text style={[s.petit, { marginTop: 8 }]}>Aucune photo enregistrée.</Text>
+        ) : null}
+      </Carte>
 
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 12 }}>
         <Carte style={{ flexGrow: 1, flexBasis: 300 }}>

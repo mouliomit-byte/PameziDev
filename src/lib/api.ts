@@ -48,6 +48,8 @@ export type Api = {
     tableau(j: string): Promise<Statistiques>;
     membres(j: string, filtre: { q?: string; statut?: StatutMembre | '' }): Promise<LigneMembre[]>;
     membre(j: string, id: string): Promise<Profil>;
+    /** Photo ou scan de la CNI du membre (data URI), ou null. */
+    pieceIdentite(j: string, id: string): Promise<{ cniPhoto: string | null }>;
     modifierMembre(j: string, id: string, champs: ModificationMembre): Promise<Profil>;
     reinitialiserPin(j: string, id: string, pin: string): Promise<void>;
     encaisserEspeces(j: string, id: string, mois: number): Promise<Profil>;
@@ -114,6 +116,7 @@ function creerApiHttp(adresse: string): Api {
       tableau: (j) => appel('GET', '/admin/tableau-de-bord', undefined, j),
       membres: (j, f) => appel('GET', `/admin/membres${q({ q: f.q, statut: f.statut })}`, undefined, j),
       membre: (j, id) => appel('GET', `/admin/membres/${id}`, undefined, j),
+      pieceIdentite: (j, id) => appel('GET', `/admin/membres/${id}/piece`, undefined, j),
       modifierMembre: (j, id, champs) => appel('PATCH', `/admin/membres/${id}`, champs, j),
       reinitialiserPin: (j, id, pin) => appel('POST', `/admin/membres/${id}/pin`, { pin }, j),
       encaisserEspeces: (j, id, mois) => appel('POST', `/admin/membres/${id}/especes`, { mois }, j),

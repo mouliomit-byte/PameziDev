@@ -9,7 +9,7 @@ import { useAdmin, useDonnees } from '@/lib/admin';
 import { api } from '@/lib/api';
 import { dateFr } from '@/lib/data';
 import { messageErreur } from '@/lib/store';
-import { formaterTelephone, LIBELLE_STATUT_MEMBRE, type StatutMembre } from '@shared/regles';
+import { formaterTelephone, LIBELLE_STATUT_MEMBRE, nomComplet, type StatutMembre } from '@shared/regles';
 
 const FILTRES: { valeur: StatutMembre | ''; libelle: string }[] = [
   { valeur: '', libelle: 'Tous' },
@@ -79,7 +79,7 @@ export default function Membres() {
             accessibilityRole="link">
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', gap: 8, flexWrap: 'wrap' }}>
               <View style={{ flexShrink: 1 }}>
-                <Text style={[s.texte, { fontWeight: '800' }]}>{m.nom}</Text>
+                <Text style={[s.texte, { fontWeight: '800' }]}>{nomComplet(m)}</Text>
                 <Text style={s.petit}>
                   {m.numero} · {formaterTelephone(m.telephone)}
                 </Text>

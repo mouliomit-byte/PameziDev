@@ -27,7 +27,7 @@ Objectif : **5 000 à 10 000 adhérents**. Convention de soins avec l'**Hôpital
 
 ### Application membre
 - **Accueil** : identité Pamezi, objectifs, règles de la tontine, formules, partenaire de soins, contacts.
-- **Adhésion** : individuelle ou via une association, formule, ayants droit, **code secret à 4 chiffres**.
+- **Formulaire d'inscription** (guide des procédures, § 1) : nom, prénom, date et lieu de naissance, âge calculé, **numéro et photo/scan de la CNI**, téléphone, localité, adhésion individuelle ou via une association, formule, ayants droit, **code secret à 4 chiffres**. Le N° d'inscription (PMZ-AAAA-00001) est attribué à la validation. Adhérent majeur (18 ans) ; les enfants sont ayants droit.
 - **Connexion** : numéro de téléphone + code secret (pour retrouver son compte sur un autre téléphone).
 - **Cotisation** : 1 à 12 mois. Mobile Money : confirmé tout de suite (simulé pour l'instant). Espèces : en attente jusqu'à confirmation par le bureau.
 - **Soins** : demande de prise en charge, statut suivi (en cours, validée, payée, rejetée), plafond restant.
@@ -35,7 +35,7 @@ Objectif : **5 000 à 10 000 adhérents**. Convention de soins avec l'**Hôpital
 
 ### Back office (propriétaire et gestionnaires)
 - **Tableau de bord** : adhérents, à jour, cotisations encaissées, soins payés, solde de la caisse, objectif 5 000 à 10 000, encaissements par mois, adhérents par localité et par formule.
-- **Membres** : recherche, filtres, fiche complète, suspendre / réactiver / démission, changer de formule, **encaisser des espèces au bureau**, remplacer un code secret oublié, **export Excel (CSV)**.
+- **Membres** : recherche, filtres, fiche complète, suspendre / réactiver / démission, changer de formule, **encaisser des espèces au bureau**, remplacer un code secret oublié, **export Excel (CSV)** aux colonnes du guide (N° d'inscription, nom, prénom, date et lieu de naissance, âge, CNI, photo CNI, téléphone…), affichage de la photo de la CNI.
 - **Cotisations** : confirmer ou rejeter les paiements en espèces déclarés.
 - **Demandes de soins** : valider, rejeter, marquer comme payée, avec commentaire.
 - **Paramètres** : formules (cotisation, taux, plafond, garanties, visibilité), centres de soins (convention signée ou non), comptes gestionnaires.

@@ -17,14 +17,20 @@ import {
   type StatutDemande,
   type StatutMembre,
   type TypeAdhesion,
+  AGE_MINIMUM,
+  calculerAge,
   calculerPriseEnCharge,
   calculerStatistiques,
   CENTRES_DEPART,
   construireProfil,
   ErreurMetier,
   FORMULES_DEPART,
+  formaterDate,
+  lireDateNaissance,
   MODES_PAIEMENT,
   MOTIFS,
+  nomComplet,
+  normaliserCni,
   normaliserTelephone,
   numeroMembre,
   prisEnChargeAnnee,
@@ -33,6 +39,8 @@ import {
 
 export type MembreStocke = Membre & { pinHash: string };
 export type AdminStocke = Admin & { motDePasseHash: string };
+/** Photo ou scan de la CNI, rangée à part (id = id du membre) pour garder les listes légères. */
+export type PieceIdentite = { id: string; cniPhoto: string; ajouteLe: string };
 
 export interface Collection<T extends { id: string }> {
   tous(): Promise<T[]>;
@@ -52,6 +60,7 @@ export interface Depot {
   centres: Collection<Centre>;
   admins: Collection<AdminStocke>;
   journal: Collection<EntreeJournal>;
+  pieces: Collection<PieceIdentite>;
 }
 
 export interface Secrets {
@@ -132,6 +141,12 @@ export async function statistiquesPubliques(ctx: Contexte) {
 
 export type DonneesAdhesion = {
   nom: string;
+  prenom: string;
+  dateNaissance: string; // JJ/MM/AAAA ou AAAA-MM-JJ
+  lieuNaissance: string;
+  cni: string;
+  /** Photo ou scan de la CNI en data URI (image JPEG/PNG/WebP, 1,5 Mo au plus). */
+  cniPhoto: string;
   telephone: string;
   localite: string;
   typeAdhesion: TypeAdhesion;
@@ -151,7 +166,19 @@ export async function profil(ctx: Contexte, membreId: string): Promise<Profil> {
 }
 
 export async function adherer(ctx: Contexte, d: DonneesAdhesion): Promise<Profil> {
-  const nom = texte(d.nom, 3, 80, 'Nom');
+  const nom = texte(d.nom, 2, 60, 'Nom');
+  const prenom = texte(d.prenom, 2, 60, 'Prénom');
+  const dateNaissance = lireDateNaissance(d.dateNaissance);
+  exiger(dateNaissance, 'Date de naissance invalide (format JJ/MM/AAAA).');
+  const age = calculerAge(dateNaissance, ctx.maintenant());
+  exiger(age >= 0 && age <= 120, 'Date de naissance invalide.');
+  exiger(age >= AGE_MINIMUM, `L’adhérent doit avoir au moins ${AGE_MINIMUM} ans. Les enfants sont couverts comme ayants droit.`);
+  const lieuNaissance = texte(d.lieuNaissance, 2, 80, 'Lieu de naissance');
+  const cni = normaliserCni(d.cni);
+  exiger(cni.length >= 6 && cni.length <= 20, 'Numéro de CNI invalide.');
+  const photo = String(d.cniPhoto ?? '');
+  exiger(/^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+/=]+$/.test(photo), 'Ajoutez la photo ou le scan de votre CNI.');
+  exiger(photo.length <= 2_000_000, 'La photo de la CNI est trop lourde (1,5 Mo au plus).');
   const telephone = normaliserTelephone(d.telephone);
   exiger(telephoneValide(telephone), 'Numéro camerounais à 9 chiffres commençant par 6.');
   exiger(/^\d{4}$/.test(String(d.pin ?? '')), 'Le code secret doit contenir 4 chiffres.');
@@ -163,6 +190,7 @@ export async function adherer(ctx: Contexte, d: DonneesAdhesion): Promise<Profil
   const ayantsDroit = entier(d.ayantsDroit ?? 0, 0, 20, 'Nombre d’ayants droit');
   const existant = await ctx.depot.membres.trouver('telephone', telephone);
   exiger(existant.length === 0, 'Ce numéro est déjà inscrit. Connectez-vous avec votre code secret.', 409);
+  exiger((await ctx.depot.membres.trouver('cni', cni)).length === 0, 'Ce numéro de CNI est déjà inscrit à la mutuelle.', 409);
 
   const maintenant = ctx.maintenant();
   const membres = await ctx.depot.membres.tous();
@@ -172,6 +200,11 @@ export async function adherer(ctx: Contexte, d: DonneesAdhesion): Promise<Profil
     id: ctx.secrets.identifiant(),
     numero: numeroMembre(annee, rang),
     nom,
+    prenom,
+    dateNaissance,
+    lieuNaissance,
+    cni,
+    pieceCni: true,
     telephone,
     localite,
     typeAdhesion: d.typeAdhesion,
@@ -183,6 +216,7 @@ export async function adherer(ctx: Contexte, d: DonneesAdhesion): Promise<Profil
     pinHash: await ctx.secrets.hacher(String(d.pin)),
   };
   await ctx.depot.membres.inserer(m);
+  await ctx.depot.pieces.inserer({ id: m.id, cniPhoto: photo, ajouteLe: maintenant.toISOString() });
   return profil(ctx, m.id);
 }
 
@@ -295,7 +329,7 @@ export async function listerMembres(ctx: Contexte, filtre: { q?: string; statut?
   const maintenant = ctx.maintenant();
   return membres
     .filter((m) => !filtre.statut || m.statut === filtre.statut)
-    .filter((m) => !q || [m.nom, m.numero, m.telephone, m.localite, m.association ?? ''].some((v) => v.toLowerCase().includes(q)))
+    .filter((m) => !q || [m.nom, m.prenom ?? '', `${m.prenom ?? ''} ${m.nom}`, m.numero, m.telephone, m.cni ?? '', m.localite, m.association ?? ''].some((v) => v.toLowerCase().includes(q)))
     .map((m) => {
       const p = construireProfil(membrePublic(m), null, cotisations.filter((c) => c.membreId === m.id), [], maintenant);
       return { ...p.membre, aJour: p.situation.aJour, nomFormule: formules.find((f) => f.id === m.formuleId)?.nom ?? m.formuleId };
@@ -324,7 +358,7 @@ export async function modifierMembre(
   if (champs.localite !== undefined) maj.localite = texte(champs.localite, 2, 60, 'Localité');
   if (champs.nom !== undefined) maj.nom = texte(champs.nom, 3, 80, 'Nom');
   await ctx.depot.membres.modifier(id, maj);
-  await tracer(ctx, admin, `Membre modifié (${Object.keys(maj).join(', ')})`, `${m.numero} · ${m.nom}`);
+  await tracer(ctx, admin, `Membre modifié (${Object.keys(maj).join(', ')})`, `${m.numero} · ${nomComplet(m)}`);
   return profil(ctx, id);
 }
 
@@ -333,7 +367,7 @@ export async function reinitialiserPin(ctx: Contexte, admin: Admin, id: string, 
   exiger(m, 'Membre introuvable.', 404);
   exiger(/^\d{4}$/.test(String(pin ?? '')), 'Le code secret doit contenir 4 chiffres.');
   await ctx.depot.membres.modifier(id, { pinHash: await ctx.secrets.hacher(pin) });
-  await tracer(ctx, admin, 'Code secret réinitialisé', `${m.numero} · ${m.nom}`);
+  await tracer(ctx, admin, 'Code secret réinitialisé', `${m.numero} · ${nomComplet(m)}`);
 }
 
 export type LigneCotisation = Cotisation & { membreNom: string; membreNumero: string };
@@ -342,7 +376,7 @@ export type LigneDemande = Demande & { membreNom: string; membreNumero: string; 
 async function avecMembres<T extends { membreId: string; date: string }>(ctx: Contexte, lignes: T[]) {
   const membres = new Map((await ctx.depot.membres.tous()).map((m) => [m.id, m]));
   return lignes
-    .map((l) => ({ ...l, membreNom: membres.get(l.membreId)?.nom ?? '—', membreNumero: membres.get(l.membreId)?.numero ?? '—' }))
+    .map((l) => ({ ...l, membreNom: membres.has(l.membreId) ? nomComplet(membres.get(l.membreId)!) : '—', membreNumero: membres.get(l.membreId)?.numero ?? '—' }))
     .sort((a, b) => b.date.localeCompare(a.date));
 }
 
@@ -486,15 +520,32 @@ export async function listerJournal(ctx: Contexte, limite = 200): Promise<Entree
   return (await ctx.depot.journal.tous()).sort((a, b) => b.date.localeCompare(a.date)).slice(0, limite);
 }
 
-export function membresEnCsv(lignes: LigneMembre[]): string {
+/** Fichier Excel des inscriptions, colonnes du guide des procédures (CSV « ; », lisible par Excel). */
+export function membresEnCsv(lignes: LigneMembre[], maintenant = new Date()): string {
   const echapper = (v: unknown) => `"${String(v ?? '').replace(/"/g, '""')}"`;
-  const entete = ['Numéro', 'Nom', 'Téléphone', 'Localité', 'Adhésion', 'Association', 'Formule', 'Ayants droit', 'Statut', 'À jour', 'Date d’adhésion'];
+  const entete = [
+    'N° d’inscription', 'Nom', 'Prénom', 'Date de naissance', 'Lieu de naissance', 'Âge', 'N° CNI', 'Photo CNI', 'Téléphone',
+    'Localité', 'Adhésion', 'Association', 'Formule', 'Ayants droit', 'Statut', 'À jour', 'Date d’inscription',
+  ];
   const corps = lignes.map((m) =>
-    [m.numero, m.nom, m.telephone, m.localite, m.typeAdhesion, m.association ?? '', m.nomFormule, m.ayantsDroit, m.statut, m.aJour ? 'oui' : 'non', m.dateAdhesion.slice(0, 10)]
+    [
+      m.numero, m.nom, m.prenom ?? '',
+      m.dateNaissance ? formaterDate(m.dateNaissance) : '', m.lieuNaissance ?? '',
+      m.dateNaissance ? calculerAge(m.dateNaissance, maintenant) : '',
+      m.cni ?? '', m.pieceCni ? 'oui' : 'non', `+237 ${m.telephone}`,
+      m.localite, m.typeAdhesion, m.association ?? '', m.nomFormule, m.ayantsDroit, m.statut, m.aJour ? 'oui' : 'non',
+      formaterDate(m.dateAdhesion),
+    ]
       .map(echapper)
       .join(';'),
   );
   return [entete.map(echapper).join(';'), ...corps].join('\n');
+}
+
+/** Photo ou scan de la CNI d'un membre (back office). */
+export async function pieceIdentite(ctx: Contexte, membreId: string): Promise<{ cniPhoto: string | null }> {
+  const p = await ctx.depot.pieces.parId(membreId);
+  return { cniPhoto: p?.cniPhoto ?? null };
 }
 
 export { prisEnChargeAnnee };

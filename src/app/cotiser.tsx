@@ -39,7 +39,7 @@ export default function Cotiser() {
           <Text style={{ fontSize: 28, fontWeight: '900', color: C.bleu }}>{fcfa(recu.montant)}</Text>
           <Text style={[s.petit, { textAlign: 'center', marginTop: 6 }]}>
             {recu.statut === 'confirmee'
-              ? `Merci ${membre.nom.split(' ')[0]} : votre cotisation renforce la tontine pour la santé.`
+              ? `Merci ${membre.prenom || membre.nom} : votre cotisation renforce la tontine pour la santé.`
               : 'Elle sera confirmée par la mutuelle dès réception des espèces. Présentez cette référence au bureau.'}
           </Text>
         </Carte>

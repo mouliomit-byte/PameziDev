@@ -36,6 +36,13 @@
             "web": false
           }
         }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Pamezi utilise vos photos pour joindre la photo ou le scan de votre carte nationale d’identité à votre adhésion.",
+          "cameraPermission": "Pamezi utilise l’appareil photo pour photographier votre carte nationale d’identité lors de l’adhésion."
+        }
       ]
     ],
     "scheme": "pamezi",

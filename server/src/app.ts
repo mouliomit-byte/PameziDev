@@ -30,7 +30,10 @@ export function creerApp(ctx: S.Contexte, options: Options) {
       maxAge: 86400,
     }),
   );
-  app.use('/api/*', bodyLimit({ maxSize: 100 * 1024, onError: (c) => c.json({ erreur: 'Requête trop volumineuse.' }, 413) }));
+  // 100 Ko par requête, sauf l'adhésion qui transporte la photo de la CNI.
+  const petit = bodyLimit({ maxSize: 100 * 1024, onError: (c) => c.json({ erreur: 'Requête trop volumineuse.' }, 413) });
+  const grand = bodyLimit({ maxSize: 2500 * 1024, onError: (c) => c.json({ erreur: 'La photo de la CNI est trop lourde.' }, 413) });
+  app.use('/api/*', (c, next) => (c.req.method === 'POST' && c.req.path === '/api/membres' ? grand(c, next) : petit(c, next)));
 
   app.onError((e, c) => {
     if (e instanceof ErreurMetier) return c.json({ erreur: e.message }, e.code as 400);
@@ -113,6 +116,10 @@ export function creerApp(ctx: S.Contexte, options: Options) {
   app.get('/api/admin/membres/:id', async (c) => {
     await admin(c);
     return c.json(await S.profil(ctx, c.req.param('id')));
+  });
+  app.get('/api/admin/membres/:id/piece', async (c) => {
+    await admin(c);
+    return c.json(await S.pieceIdentite(ctx, c.req.param('id')));
   });
   app.patch('/api/admin/membres/:id', async (c) => c.json(await S.modifierMembre(ctx, await admin(c), c.req.param('id'), await corps(c))));
   app.post('/api/admin/membres/:id/pin', async (c) => {

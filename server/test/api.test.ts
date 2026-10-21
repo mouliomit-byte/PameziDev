@@ -23,8 +23,16 @@ async function appel(methode: string, chemin: string, corps?: unknown, jeton?: s
   return { statut: r.status, json };
 }
 
+// Image PNG de 1×1 pixel, pour tester l'envoi de la photo de la CNI.
+const PHOTO = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=';
+
 const adhesion = {
-  nom: 'Njoya Aïcha',
+  nom: 'Njoya',
+  prenom: 'Aïcha',
+  dateNaissance: '25/07/1985',
+  lieuNaissance: 'Foumban',
+  cni: '1234 56789',
+  cniPhoto: PHOTO,
   telephone: '677 12 34 56',
   localite: 'Foumban',
   typeAdhesion: 'Via une association',
@@ -59,15 +67,31 @@ describe('espace membre', () => {
     assert.match(r.json.erreur, /9 chiffres/);
   });
 
+  test('identité contrôlée : date, âge, photo', async () => {
+    const autre = { ...adhesion, telephone: '699000000', cni: '999999999' };
+    assert.match((await appel('POST', '/api/membres', { ...autre, dateNaissance: '31/02/1990' })).json.erreur, /Date de naissance/);
+    const mineur = `01/01/${new Date().getFullYear() - 10}`;
+    assert.match((await appel('POST', '/api/membres', { ...autre, dateNaissance: mineur })).json.erreur, /18 ans/);
+    assert.match((await appel('POST', '/api/membres', { ...autre, cniPhoto: '' })).json.erreur, /photo/);
+    assert.equal((await appel('POST', '/api/membres', { ...autre, cni: '12' })).statut, 400);
+  });
+
   test('adhésion, puis doublon refusé', async () => {
     const r = await appel('POST', '/api/membres', adhesion);
     assert.equal(r.statut, 201);
     assert.match(r.json.profil.membre.numero, /^PMZ-\d{4}-00001$/);
     assert.equal(r.json.profil.membre.telephone, '677123456');
     assert.equal(r.json.profil.membre.pinHash, undefined, 'le code secret ne doit jamais sortir');
+    assert.equal(r.json.profil.membre.dateNaissance, '1985-07-25');
+    assert.equal(r.json.profil.membre.cni, '123456789');
+    assert.equal(r.json.profil.membre.pieceCni, true);
+    assert.equal(r.json.profil.membre.cniPhoto, undefined, 'la photo reste à part');
     jetonMembre = r.json.jeton;
     membreId = r.json.profil.membre.id;
     assert.equal((await appel('POST', '/api/membres', adhesion)).statut, 409);
+    const memeCni = await appel('POST', '/api/membres', { ...adhesion, telephone: '699111111' });
+    assert.equal(memeCni.statut, 409);
+    assert.match(memeCni.json.erreur, /CNI/);
   });
 
   test('connexion avec le code secret', async () => {
@@ -177,11 +201,20 @@ describe('back office', () => {
     assert.equal((await appel('GET', '/api/admin/membres', undefined, jg)).statut, 401, 'compte désactivé');
   });
 
+  test('pièce d’identité visible par le back office seulement', async () => {
+    assert.equal((await appel('GET', `/api/admin/membres/${membreId}/piece`, undefined, jetonMembre)).statut, 401);
+    const r = await appel('GET', `/api/admin/membres/${membreId}/piece`, undefined, jetonProprio);
+    assert.equal(r.json.cniPhoto, PHOTO);
+  });
+
   test('recherche, export CSV et journal', async () => {
     const r = await appel('GET', '/api/admin/membres?q=njimom', undefined, jetonProprio);
     assert.equal(r.json.length, 1);
+    assert.equal((await appel('GET', '/api/admin/membres?q=123456789', undefined, jetonProprio)).json.length, 1, 'recherche par CNI');
     const csv = await appel('GET', '/api/admin/membres.csv', undefined, jetonProprio);
     assert.match(csv.json, /PMZ-\d{4}-00001/);
+    assert.match(csv.json, /"N° d’inscription";"Nom";"Prénom";"Date de naissance";"Lieu de naissance";"Âge";"N° CNI";"Photo CNI";"Téléphone"/);
+    assert.match(csv.json, /"Njoya";"Aïcha";"25\/07\/1985";"Foumban";"\d+";"123456789";"oui";"\+237 677123456"/);
     const j = await appel('GET', '/api/admin/journal', undefined, jetonProprio);
     assert.ok(j.json.length >= 6);
     assert.ok(j.json.some((e: any) => e.action === 'Prise en charge payée'));

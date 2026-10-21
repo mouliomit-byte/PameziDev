@@ -5,7 +5,7 @@ import type { Collection, Depot } from './service.ts';
 
 export type EtatMemoire = Record<keyof Depot, Record<string, unknown>[]>;
 
-const NOMS: (keyof Depot)[] = ['membres', 'cotisations', 'demandes', 'formules', 'centres', 'admins', 'journal'];
+const NOMS: (keyof Depot)[] = ['membres', 'cotisations', 'demandes', 'formules', 'centres', 'admins', 'journal', 'pieces'];
 
 export function etatVide(): EtatMemoire {
   return Object.fromEntries(NOMS.map((n) => [n, []])) as unknown as EtatMemoire;
