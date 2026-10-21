@@ -1,25 +1,36 @@
 {
   "expo": {
-    "name": "pamezi",
+    "name": "Pamezi",
     "slug": "pamezi",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "cm.pamezi.app"
     },
     "android": {
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
+        "backgroundColor": "#0F7A4A",
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "package": "cm.pamezi.app"
     },
     "web": {
-      "favicon": "./assets/favicon.png"
+      "favicon": "./assets/favicon.png",
+      "name": "Pamezi – Mutuelle de santé",
+      "output": "single"
+    },
+    "plugins": [
+      "expo-router"
+    ],
+    "scheme": "pamezi",
+    "experiments": {
+      "typedRoutes": true
     }
   }
 }
