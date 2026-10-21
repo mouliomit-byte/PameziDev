@@ -1,5 +1,6 @@
 // Mots de passe (scrypt), jetons de session signés (HMAC-SHA256) et limitation des tentatives.
 
+import { Buffer } from 'node:buffer';
 import { createHmac, randomBytes, randomUUID, scrypt, timingSafeEqual } from 'node:crypto';
 
 import type { Secrets } from '../../shared/service.ts';

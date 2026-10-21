@@ -103,11 +103,11 @@ const reference = (ctx: Contexte) => ctx.secrets.identifiant().replace(/-/g, '')
 /** Crée les formules, les centres et le compte propriétaire s'ils n'existent pas encore. */
 export async function initialiser(
   ctx: Contexte,
-  proprietaire: { email: string; nom: string; motDePasse: string },
+  proprietaire?: { email: string; nom: string; motDePasse: string },
 ): Promise<{ proprietaireCree: boolean }> {
   if ((await ctx.depot.formules.tous()).length === 0) for (const f of FORMULES_DEPART) await ctx.depot.formules.inserer(f);
   if ((await ctx.depot.centres.tous()).length === 0) for (const c of CENTRES_DEPART) await ctx.depot.centres.inserer(c);
-  if ((await ctx.depot.admins.tous()).length > 0) return { proprietaireCree: false };
+  if (!proprietaire || (await ctx.depot.admins.tous()).length > 0) return { proprietaireCree: false };
   await ctx.depot.admins.inserer({
     id: ctx.secrets.identifiant(),
     email: proprietaire.email.toLowerCase(),
@@ -159,10 +159,12 @@ export type DonneesAdhesion = {
 export async function profil(ctx: Contexte, membreId: string): Promise<Profil> {
   const m = await ctx.depot.membres.parId(membreId);
   exiger(m, 'Membre introuvable.', 404);
-  const formule = (await ctx.depot.formules.parId(m.formuleId)) ?? null;
-  const cotisations = await ctx.depot.cotisations.trouver('membreId', m.id);
-  const demandes = await ctx.depot.demandes.trouver('membreId', m.id);
-  return construireProfil(membrePublic(m), formule, cotisations, demandes, ctx.maintenant());
+  const [formule, cotisations, demandes] = await Promise.all([
+    ctx.depot.formules.parId(m.formuleId),
+    ctx.depot.cotisations.trouver('membreId', m.id),
+    ctx.depot.demandes.trouver('membreId', m.id),
+  ]);
+  return construireProfil(membrePublic(m), formule ?? null, cotisations, demandes, ctx.maintenant());
 }
 
 export async function adherer(ctx: Contexte, d: DonneesAdhesion): Promise<Profil> {

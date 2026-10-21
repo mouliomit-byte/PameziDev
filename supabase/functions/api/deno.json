@@ -1,0 +1,9 @@
+{
+  "imports": {
+    "hono": "npm:hono@4.13.13",
+    "hono/body-limit": "npm:hono@4.13.13/body-limit",
+    "hono/cors": "npm:hono@4.13.13/cors",
+    "hono/secure-headers": "npm:hono@4.13.13/secure-headers",
+    "postgres": "npm:postgres@3.4.9"
+  }
+}

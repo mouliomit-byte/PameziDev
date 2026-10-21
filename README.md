@@ -71,7 +71,7 @@ npm install                 # application
 npm --prefix server install # serveur
 
 # 1) Tout-en-un : serveur + site Web (membres et back office) sur http://localhost:8787
-npm run build:web           # construit le site branché sur l'API du même serveur
+npm run build:web -- --meme-serveur  # site branché sur l'API du même serveur
 ADMIN_EMAIL=vous@exemple.cm ADMIN_MOT_DE_PASSE='un-mot-de-passe-solide' npm run serveur
 
 # 2) Application mobile branchée sur le serveur (Expo Go ou build EAS)
@@ -92,6 +92,28 @@ npm run serveur:test                # 18 tests de l'API (adhésion → back offi
 npm run build:artifact              # application en un seul fichier HTML (démonstration)
 npm run build:artifact -- --back-office  # idem, ouverte directement sur le back office
 ```
+
+## En ligne : Supabase (projet « pamezi »)
+
+Le back-end tourne sur **Supabase** (offre gratuite, région Paris) :
+
+- **API** : `https://ghzlndruycdlujbdbrwm.supabase.co/functions/v1/api/…` (fonction `supabase/functions/api`,
+  même code que `server/`, branchée sur Postgres).
+- **Base de données** : schéma privé `pamezi` (`supabase/migrations/`), accessible uniquement par l'API.
+- L'application (Web, Android, iPhone) utilise cette adresse : `.env.production` et `eas.json`.
+
+**Créer le compte propriétaire** : tableau de bord Supabase › projet *pamezi* › Edge Functions › *Secrets*,
+ajouter `ADMIN_EMAIL` et `ADMIN_MOT_DE_PASSE` (12 caractères ou plus). Le compte est créé au premier appel
+de l'API ; se connecter ensuite au back office (`/admin`).
+
+**Redéployer l'API** après une modification de `shared/` ou `server/src/` :
+
+```bash
+npm run fonction:preparer
+npx supabase functions deploy api --no-verify-jwt --project-ref ghzlndruycdlujbdbrwm
+```
+
+Les artefacts claude.ai restent en mode démonstration : une page d'artefact ne peut joindre aucun serveur extérieur.
 
 ## Déployer en production
 

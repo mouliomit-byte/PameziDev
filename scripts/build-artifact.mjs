@@ -15,8 +15,7 @@ const FICHIER = BACK_OFFICE ? 'pamezi-back-office.html' : 'pamezi-app.html';
 const MIME = { '.png': 'image/png', '.ttf': 'font/ttf', '.jpg': 'image/jpeg', '.svg': 'image/svg+xml' };
 
 // L'artefact ne peut joindre aucun serveur : il est toujours construit en mode démonstration.
-const env = { ...process.env };
-delete env.EXPO_PUBLIC_API_URL;
+const env = { ...process.env, EXPO_PUBLIC_API_URL: '' }; // vide : l'emporte sur .env.production
 execSync('npx expo export --platform web --clear', { stdio: 'inherit', env });
 
 const html = fs.readFileSync(path.join(DIST, 'index.html'), 'utf8');
