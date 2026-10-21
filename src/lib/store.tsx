@@ -8,8 +8,10 @@ export type Membre = {
   nom: string;
   telephone: string;
   localite: string;
+  typeAdhesion: 'Individuelle' | 'Via une association';
+  association?: string;
   formule: FormuleId;
-  beneficiaires: number;
+  ayantsDroit: number;
   dateAdhesion: string;
 };
 
@@ -25,14 +27,10 @@ export type Demande = {
   statut: 'En cours' | 'Validée' | 'Payée';
 };
 
-type Etat = { membre: Membre | null; cotisations: Cotisation[]; demandes: Demande[]; filleuls: number };
+type Etat = { membre: Membre | null; cotisations: Cotisation[]; demandes: Demande[]; invitations: number };
 
-const VIDE: Etat = { membre: null, cotisations: [], demandes: [], filleuls: 0 };
-const CLE = 'pamezi:etat:v1';
-
-// Chiffres de la communauté (de démonstration tant qu'aucun serveur n'est branché).
-const BASE_MEMBRES = 1248;
-const BASE_CAISSE = 4_870_000;
+const VIDE: Etat = { membre: null, cotisations: [], demandes: [], invitations: 0 };
+const CLE = 'pamezi:etat:v2';
 
 type Ctx = Etat & {
   pret: boolean;
@@ -40,11 +38,10 @@ type Ctx = Etat & {
   totalCotise: number;
   totalRembourse: number;
   plafondRestant: number;
-  communaute: { membres: number; caisse: number; villages: number };
   adherer: (m: Omit<Membre, 'numero' | 'dateAdhesion'>) => void;
   cotiser: (mois: number, mode: ModePaiement) => Cotisation | null;
   demander: (d: { centre: string; motif: string; montant: number }) => Demande | null;
-  parrainer: () => void;
+  inviter: () => void;
   reinitialiser: () => void;
 };
 
@@ -84,11 +81,6 @@ export function PameziProvider({ children }: { children: ReactNode }) {
       totalCotise,
       totalRembourse,
       plafondRestant,
-      communaute: {
-        membres: BASE_MEMBRES + (etat.membre ? 1 : 0) + etat.filleuls,
-        caisse: BASE_CAISSE + totalCotise - totalRembourse,
-        villages: 37,
-      },
       adherer: (m) =>
         maj((e) => ({
           ...e,
@@ -118,7 +110,7 @@ export function PameziProvider({ children }: { children: ReactNode }) {
         maj((e) => ({ ...e, demandes: [d, ...e.demandes] }));
         return d;
       },
-      parrainer: () => maj((e) => ({ ...e, filleuls: e.filleuls + 1 })),
+      inviter: () => maj((e) => ({ ...e, invitations: e.invitations + 1 })),
       reinitialiser: () => maj(() => VIDE),
     }),
     [etat, pret, formule, totalCotise, totalRembourse, plafondRestant, maj],

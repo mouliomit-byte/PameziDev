@@ -1,21 +1,19 @@
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { router } from 'expo-router';
 import { Share, Text, View } from 'react-native';
 
-import { Badge, Bouton, C, Carte, Ecran, Ligne, s, Titre, Vide } from '@/components/ui';
-import { dateFr, fcfa, SLOGAN, SOLIDARITE } from '@/lib/data';
+import { Badge, Bouton, C, Carte, Ecran, Ligne, s, Section, Titre, Vide } from '@/components/ui';
+import { CONTACTS, dateFr, fcfa, nombre, OBJECTIF_ADHERENTS, SLOGAN, SOLIDARITE } from '@/lib/data';
 import { situation, usePamezi } from '@/lib/store';
 
-// Objectif de membres : plus nous sommes nombreux, plus la caisse peut soigner.
-const PALIERS = [1000, 2500, 5000, 10000];
-
 export default function Tontine() {
-  const { membre, formule, cotisations, totalCotise, communaute, filleuls, parrainer } = usePamezi();
+  const { membre, formule, cotisations, totalCotise, invitations, inviter } = usePamezi();
 
   if (!membre || !formule) {
     return (
       <Ecran>
         <Titre sous={SOLIDARITE}>Tontine santé</Titre>
-        <Vide icone="people" texte="Adhérez à Pamezi pour participer à la tontine santé et cotiser chaque mois.">
+        <Vide icone="people" texte="Adhérez à la Mutuelle de Santé Pamezi pour participer à la tontine pour la santé.">
           <Bouton titre="Adhérer" icone="person-add" onPress={() => router.push('/adhesion')} />
         </Vide>
       </Ecran>
@@ -23,15 +21,16 @@ export default function Tontine() {
   }
 
   const sit = situation(membre, cotisations);
-  const palier = PALIERS.find((p) => p > communaute.membres) ?? PALIERS[PALIERS.length - 1];
-  const progres = Math.min(1, communaute.membres / palier);
 
-  const inviter = async () => {
+  const partager = async () => {
     try {
-      await Share.share({
-        message: `Rejoins-moi dans Pamezi, la mutuelle de santé du Noun ! ${SLOGAN}. Dès 1 000 FCFA/mois, on se soigne ensemble. Mon numéro de parrain : ${membre.numero}`,
+      const r = await Share.share({
+        message:
+          `Rejoins la Mutuelle de Santé Pamezi : ${SLOGAN}\n` +
+          `Une tontine pour la santé : on cotise chaque mois et on est pris en charge en cas de maladie, avec sa famille.\n` +
+          `Mon numéro de membre : ${membre.numero}\nInfos : ${CONTACTS.instagram}`,
       });
-      parrainer();
+      if (r.action !== Share.dismissedAction) inviter();
     } catch {}
   };
 
@@ -39,52 +38,66 @@ export default function Tontine() {
     <Ecran>
       <Titre sous={SOLIDARITE}>Tontine santé</Titre>
 
-      <Carte style={{ backgroundColor: C.vert, borderColor: C.vert }}>
-        <Text style={{ color: '#CFEBDC', fontSize: 14 }}>Ma participation à la caisse</Text>
-        <Text style={{ color: C.blanc, fontSize: 30, fontWeight: '900', marginVertical: 4 }}>{fcfa(totalCotise)}</Text>
-        <Text style={{ color: C.blanc }}>
-          {sit.moisPayes} mois payés · cotisation {fcfa(formule.cotisation)}/mois
-        </Text>
-        <View style={{ marginTop: 10 }}>
-          <Badge texte={sit.aJour ? 'À JOUR' : `${sit.moisDus - sit.moisPayes} MOIS EN RETARD`} couleur={sit.aJour ? C.or : '#FFB4A8'} />
+      <View style={{ backgroundColor: C.bleu, borderRadius: 22, padding: 20, marginBottom: 14 }}>
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+          <Text style={{ color: C.bleuPale, fontSize: 14, fontWeight: '600' }}>Ma participation</Text>
+          <View style={{ backgroundColor: sit.aJour ? C.jaune : '#FFD7D2', borderRadius: 8, paddingHorizontal: 9, paddingVertical: 4 }}>
+            <Text style={{ fontSize: 11, fontWeight: '900', color: sit.aJour ? C.bleuNuit : C.rouge }}>
+              {sit.aJour ? 'À JOUR' : `${sit.moisDus - sit.moisPayes} MOIS EN RETARD`}
+            </Text>
+          </View>
         </View>
-        <Bouton titre="Cotiser" icone="wallet" variante="or" onPress={() => router.push('/cotiser')} />
-      </Carte>
+        <Text style={{ color: C.blanc, fontSize: 34, fontWeight: '900', marginVertical: 6 }}>{fcfa(totalCotise)}</Text>
+        <Text style={{ color: C.blanc, fontSize: 14 }}>
+          {sit.moisPayes} mois payés · {fcfa(formule.cotisation)} par mois · formule {formule.nom}
+        </Text>
+        <Bouton titre="Cotiser" icone="wallet" variante="blanc" onPress={() => router.push('/cotiser')} />
+      </View>
 
       <Carte>
-        <Text style={s.h2}>Ensemble, nous sommes {communaute.membres.toLocaleString('fr-FR')}</Text>
-        <Text style={s.petit}>Prochain objectif : {palier.toLocaleString('fr-FR')} membres dans le Noun</Text>
-        <View style={{ height: 12, backgroundColor: C.vertClair, borderRadius: 6, marginVertical: 10, overflow: 'hidden' }}>
-          <View style={{ width: `${progres * 100}%`, height: '100%', backgroundColor: C.or }} />
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+          <View style={s.pastille}>
+            <Ionicons name="megaphone" size={22} color={C.bleu} />
+          </View>
+          <View style={{ flex: 1 }}>
+            <Text style={[s.h2, { marginBottom: 0 }]}>
+              Objectif : {nombre(OBJECTIF_ADHERENTS.min)} à {nombre(OBJECTIF_ADHERENTS.max)} adhérents
+            </Text>
+          </View>
         </View>
-        <Text style={s.texte}>
-          Caisse solidaire : <Text style={{ fontWeight: '800' }}>{fcfa(communaute.caisse)}</Text>
+        <Text style={[s.texte, { marginTop: 10 }]}>
+          Chaque nouvel adhérent renforce la caisse commune : le risque maladie est partagé entre plus de familles, et l’assemblée générale peut élargir les maladies prises en charge ou diminuer les cotisations.
         </Text>
-        <Text style={[s.petit, { marginTop: 6 }]}>
-          Chaque nouveau membre renforce la caisse : le risque est partagé entre plus de familles et chacun est mieux protégé.
-        </Text>
-        <Bouton titre="Inviter un proche" icone="share-social" variante="contour" onPress={inviter} />
-        {filleuls > 0 ? <Text style={[s.petit, { marginTop: 8 }]}>Vous avez invité {filleuls} personne(s). Merci !</Text> : null}
+        <Bouton titre="Inviter un proche" icone="share-social" variante="contour" onPress={partager} />
+        {invitations > 0 ? (
+          <Text style={[s.petit, { marginTop: 8, textAlign: 'center' }]}>Merci ! Vous avez partagé Pamezi {invitations} fois.</Text>
+        ) : null}
       </Carte>
 
-      <Carte>
-        <Text style={s.h2}>Règles de la tontine</Text>
+      <Section icone="document-text">Règles de la tontine</Section>
+      <Carte style={{ paddingVertical: 6 }}>
         <Ligne icone="calendar" gauche="Cotisation" droite="Chaque mois" />
-        <Ligne icone="time" gauche="Délai de carence" droite="1 mois" />
-        <Ligne icone="shield-checkmark" gauche="Prise en charge" droite={`${formule.taux}%`} />
-        <Ligne icone="people-circle" gauche="Assemblée des membres" droite="Chaque trimestre" />
-        <Text style={[s.petit, { marginTop: 8 }]}>
-          La caisse appartient aux membres. Les comptes sont présentés à chaque assemblée, village par village.
-        </Text>
+        <Ligne icone="people" gauche="Couverture" droite={`Vous + ${membre.ayantsDroit} ayant(s) droit`} />
+        <Ligne icone="shield-checkmark" gauche="Prise en charge" droite={`${formule.taux} %`} />
+        <Ligne icone="podium" gauche="Assemblée générale" droite="Chaque année" />
+        <Ligne icone="exit" gauche="Adhésion / démission" droite="Libres" />
       </Carte>
 
-      <Text style={s.h2}>Historique des cotisations</Text>
+      <Section icone="receipt">Historique des cotisations</Section>
       {cotisations.length === 0 ? (
-        <Vide icone="receipt" texte="Aucune cotisation pour le moment." />
+        <Vide icone="receipt" texte="Aucune cotisation enregistrée pour le moment." />
       ) : (
-        <Carte>
+        <Carte style={{ paddingVertical: 6 }}>
           {cotisations.map((c) => (
-            <Ligne key={c.id} gauche={`${dateFr(c.date)} · ${c.mode}`} droite={fcfa(c.montant)} />
+            <View key={c.id} style={{ flexDirection: 'row', alignItems: 'center', paddingVertical: 11, borderBottomWidth: 1, borderBottomColor: C.bord }}>
+              <View style={{ flex: 1 }}>
+                <Text style={[s.texte, { fontWeight: '700' }]}>{c.mois} mois</Text>
+                <Text style={s.petit}>
+                  {dateFr(c.date)} · {c.mode}
+                </Text>
+              </View>
+              <Badge texte={fcfa(c.montant)} couleur={C.vert} />
+            </View>
           ))}
         </Carte>
       )}

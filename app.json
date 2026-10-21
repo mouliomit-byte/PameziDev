@@ -12,7 +12,7 @@
     },
     "android": {
       "adaptiveIcon": {
-        "backgroundColor": "#0F7A4A",
+        "backgroundColor": "#0B5FB0",
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
@@ -22,8 +22,11 @@
     },
     "web": {
       "favicon": "./assets/favicon.png",
-      "name": "Pamezi – Mutuelle de santé",
-      "output": "single"
+      "name": "Mutuelle de Santé Pamezi",
+      "output": "single",
+      "shortName": "Pamezi",
+      "themeColor": "#0B5FB0",
+      "backgroundColor": "#F3F6FA"
     },
     "plugins": [
       "expo-router"

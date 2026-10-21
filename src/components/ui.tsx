@@ -3,17 +3,20 @@ import { ReactNode } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, TextInput, TextInputProps, View, ViewStyle } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+// Identité visuelle reprise de l'affiche : bleu Pamezi + couleurs du Cameroun.
 export const C = {
-  vert: '#0F7A4A',
-  vertFonce: '#0A5534',
-  vertClair: '#E7F4EC',
-  or: '#E3A72F',
-  orClair: '#FDF3DE',
-  rouge: '#C0392B',
-  texte: '#1C2B23',
-  gris: '#5E6B64',
-  bord: '#DCE5DF',
-  fond: '#F5F8F6',
+  bleu: '#0B5FB0',
+  bleuFonce: '#073D75',
+  bleuNuit: '#062B54',
+  bleuClair: '#E8F1FB',
+  bleuPale: '#C9DEF5',
+  vert: '#007A3D',
+  rouge: '#CE1126',
+  jaune: '#FCD116',
+  texte: '#0F1E33',
+  gris: '#5B6B80',
+  bord: '#DCE4EE',
+  fond: '#F3F6FA',
   blanc: '#FFFFFF',
 };
 
@@ -29,11 +32,67 @@ export function Ecran({ children, bords = ['top'] }: { children: ReactNode; bord
   );
 }
 
+/** Logo Pamezi : « M » blanc dans un cercle bleu cerclé de blanc. */
+export function Logo({ taille = 48, inverse }: { taille?: number; inverse?: boolean }) {
+  const fond = inverse ? C.blanc : C.bleu;
+  const encre = inverse ? C.bleu : C.blanc;
+  return (
+    <View
+      style={{
+        width: taille,
+        height: taille,
+        borderRadius: taille / 2,
+        backgroundColor: fond,
+        alignItems: 'center',
+        justifyContent: 'center',
+      }}>
+      <View
+        style={{
+          width: taille * 0.8,
+          height: taille * 0.8,
+          borderRadius: taille * 0.4,
+          borderWidth: Math.max(1.5, taille * 0.05),
+          borderColor: encre,
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}>
+        <Text style={{ color: encre, fontSize: taille * 0.44, fontWeight: '900', marginTop: -taille * 0.02 }}>M</Text>
+      </View>
+    </View>
+  );
+}
+
+/** Filet tricolore vert-rouge-jaune, comme sur l'affiche. */
+export function Tricolore({ largeur = 96, hauteur = 4 }: { largeur?: number | `${number}%`; hauteur?: number }) {
+  return (
+    <View style={{ flexDirection: 'row', width: largeur, height: hauteur, borderRadius: hauteur, overflow: 'hidden' }}>
+      <View style={{ flex: 1, backgroundColor: C.vert }} />
+      <View style={{ flex: 1, backgroundColor: C.rouge }} />
+      <View style={{ flex: 1, backgroundColor: C.jaune }} />
+    </View>
+  );
+}
+
 export function Titre({ children, sous }: { children: ReactNode; sous?: string }) {
   return (
-    <View style={{ marginBottom: 16 }}>
+    <View style={{ marginBottom: 18 }}>
       <Text style={s.titre}>{children}</Text>
-      {sous ? <Text style={s.sous}>{sous}</Text> : null}
+      <View style={{ marginTop: 8 }}>
+        <Tricolore largeur={56} />
+      </View>
+      {sous ? <Text style={[s.sous, { marginTop: 8 }]}>{sous}</Text> : null}
+    </View>
+  );
+}
+
+/** En-tête de section façon « pastille » de l'affiche. */
+export function Section({ icone, children }: { icone: IconName; children: ReactNode }) {
+  return (
+    <View style={s.section}>
+      <View style={s.sectionIcone}>
+        <Ionicons name={icone} size={18} color={C.blanc} />
+      </View>
+      <Text style={s.sectionTexte}>{children}</Text>
     </View>
   );
 }
@@ -52,31 +111,37 @@ export function Bouton({
   titre: string;
   onPress: () => void;
   icone?: IconName;
-  variante?: 'plein' | 'contour' | 'or';
+  variante?: 'plein' | 'contour' | 'blanc' | 'danger';
   desactive?: boolean;
 }) {
-  const fond = variante === 'plein' ? C.vert : variante === 'or' ? C.or : 'transparent';
-  const couleur = variante === 'contour' ? C.vert : variante === 'or' ? C.texte : C.blanc;
+  const styles = {
+    plein: { fond: C.bleu, bord: C.bleu, encre: C.blanc },
+    contour: { fond: 'transparent', bord: C.bleu, encre: C.bleu },
+    blanc: { fond: C.blanc, bord: C.blanc, encre: C.bleuFonce },
+    danger: { fond: C.rouge, bord: C.rouge, encre: C.blanc },
+  }[variante];
   return (
     <Pressable
       accessibilityRole="button"
+      accessibilityState={{ disabled: !!desactive }}
       onPress={onPress}
       disabled={desactive}
       style={({ pressed }) => [
         s.bouton,
-        { backgroundColor: fond, borderColor: variante === 'contour' ? C.vert : fond, opacity: desactive ? 0.45 : pressed ? 0.8 : 1 },
+        { backgroundColor: styles.fond, borderColor: styles.bord, opacity: desactive ? 0.4 : pressed ? 0.85 : 1 },
       ]}>
-      {icone ? <Ionicons name={icone} size={20} color={couleur} /> : null}
-      <Text style={[s.boutonTexte, { color: couleur }]}>{titre}</Text>
+      {icone ? <Ionicons name={icone} size={20} color={styles.encre} /> : null}
+      <Text style={[s.boutonTexte, { color: styles.encre }]}>{titre}</Text>
     </Pressable>
   );
 }
 
-export function Champ({ label, ...props }: TextInputProps & { label: string }) {
+export function Champ({ label, aide, ...props }: TextInputProps & { label: string; aide?: string }) {
   return (
-    <View style={{ marginBottom: 14 }}>
+    <View style={{ marginBottom: 16 }}>
       <Text style={s.label}>{label}</Text>
-      <TextInput placeholderTextColor="#98A39D" style={s.input} {...props} />
+      <TextInput placeholderTextColor="#98A6B8" style={s.input} {...props} />
+      {aide ? <Text style={[s.petit, { marginTop: 4 }]}>{aide}</Text> : null}
     </View>
   );
 }
@@ -93,7 +158,7 @@ export function Choix<T extends string>({
   onChange: (v: T) => void;
 }) {
   return (
-    <View style={{ marginBottom: 14 }}>
+    <View style={{ marginBottom: 16 }}>
       <Text style={s.label}>{label}</Text>
       <View style={s.puces}>
         {options.map((o) => {
@@ -104,7 +169,8 @@ export function Choix<T extends string>({
               accessibilityRole="radio"
               accessibilityState={{ selected: actif }}
               onPress={() => onChange(o)}
-              style={[s.puce, actif && { backgroundColor: C.vert, borderColor: C.vert }]}>
+              style={[s.puce, actif && { backgroundColor: C.bleu, borderColor: C.bleu }]}>
+              {actif ? <Ionicons name="checkmark" size={14} color={C.blanc} /> : null}
               <Text style={[s.puceTexte, actif && { color: C.blanc }]}>{o}</Text>
             </Pressable>
           );
@@ -114,30 +180,28 @@ export function Choix<T extends string>({
   );
 }
 
-export function Stat({ icone, valeur, label }: { icone: IconName; valeur: string; label: string }) {
-  return (
-    <View style={s.stat}>
-      <Ionicons name={icone} size={22} color={C.vert} />
-      <Text style={s.statValeur}>{valeur}</Text>
-      <Text style={s.statLabel}>{label}</Text>
-    </View>
-  );
-}
-
 export function Ligne({ gauche, droite, icone }: { gauche: string; droite: string; icone?: IconName }) {
   return (
     <View style={s.ligne}>
-      {icone ? <Ionicons name={icone} size={18} color={C.gris} style={{ marginRight: 8 }} /> : null}
-      <Text style={[s.texte, { flex: 1 }]}>{gauche}</Text>
-      <Text style={[s.texte, { fontWeight: '700' }]}>{droite}</Text>
+      {icone ? <Ionicons name={icone} size={18} color={C.bleu} style={{ marginRight: 10 }} /> : null}
+      <Text style={[s.texte, { flex: 1, color: C.gris }]}>{gauche}</Text>
+      <Text style={[s.texte, { fontWeight: '700', flexShrink: 1, textAlign: 'right' }]}>{droite}</Text>
     </View>
   );
 }
 
-export function Badge({ texte, couleur = C.vert }: { texte: string; couleur?: string }) {
+export function Badge({ texte, couleur = C.bleu }: { texte: string; couleur?: string }) {
   return (
-    <View style={[s.badge, { backgroundColor: couleur + '22' }]}>
+    <View style={[s.badge, { backgroundColor: couleur + '1F' }]}>
       <Text style={[s.badgeTexte, { color: couleur }]}>{texte}</Text>
+    </View>
+  );
+}
+
+export function Numero({ n }: { n: number }) {
+  return (
+    <View style={s.numero}>
+      <Text style={{ color: C.blanc, fontWeight: '800', fontSize: 15 }}>{n}</Text>
     </View>
   );
 }
@@ -145,59 +209,74 @@ export function Badge({ texte, couleur = C.vert }: { texte: string; couleur?: st
 export function Vide({ icone, texte, children }: { icone: IconName; texte: string; children?: ReactNode }) {
   return (
     <Carte style={{ alignItems: 'center', paddingVertical: 28 }}>
-      <Ionicons name={icone} size={40} color={C.or} />
-      <Text style={[s.texte, { textAlign: 'center', marginVertical: 12 }]}>{texte}</Text>
-      {children}
+      <View style={[s.pastille, { width: 64, height: 64, borderRadius: 32 }]}>
+        <Ionicons name={icone} size={30} color={C.bleu} />
+      </View>
+      <Text style={[s.texte, { textAlign: 'center', marginVertical: 14, color: C.gris }]}>{texte}</Text>
+      {children ? <View style={{ alignSelf: 'stretch' }}>{children}</View> : null}
     </Carte>
   );
 }
 
+const ombre = {
+  shadowColor: '#0B3A6E',
+  shadowOpacity: 0.08,
+  shadowRadius: 12,
+  shadowOffset: { width: 0, height: 4 },
+  elevation: 2,
+};
+
 export const s = StyleSheet.create({
-  ecran: { padding: 16, paddingBottom: 40, alignItems: 'center' },
-  colonne: { width: '100%', maxWidth: 640 },
-  titre: { fontSize: 26, fontWeight: '800', color: C.texte },
-  sous: { fontSize: 15, color: C.gris, marginTop: 4 },
-  h2: { fontSize: 18, fontWeight: '700', color: C.texte, marginBottom: 10 },
-  texte: { fontSize: 15, color: C.texte, lineHeight: 21 },
-  petit: { fontSize: 13, color: C.gris, lineHeight: 18 },
-  carte: {
-    backgroundColor: C.blanc,
-    borderRadius: 16,
-    padding: 16,
-    marginBottom: 14,
-    borderWidth: 1,
-    borderColor: C.bord,
-  },
+  ecran: { padding: 16, paddingBottom: 48, alignItems: 'center' },
+  colonne: { width: '100%', maxWidth: 680 },
+  titre: { fontSize: 28, fontWeight: '900', color: C.bleuFonce, letterSpacing: -0.3 },
+  sous: { fontSize: 15, color: C.gris, fontStyle: 'italic' },
+  h2: { fontSize: 18, fontWeight: '800', color: C.texte, marginBottom: 10 },
+  texte: { fontSize: 15, color: C.texte, lineHeight: 22 },
+  petit: { fontSize: 13, color: C.gris, lineHeight: 19 },
+  carte: { backgroundColor: C.blanc, borderRadius: 18, padding: 18, marginBottom: 14, ...ombre },
+  section: { flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: 10, marginBottom: 12 },
+  sectionIcone: { backgroundColor: C.bleu, width: 32, height: 32, borderRadius: 16, alignItems: 'center', justifyContent: 'center' },
+  sectionTexte: { fontSize: 15, fontWeight: '900', color: C.bleuFonce, textTransform: 'uppercase', letterSpacing: 0.6, flex: 1 },
   bouton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
-    paddingVertical: 14,
+    paddingVertical: 15,
     paddingHorizontal: 18,
-    borderRadius: 12,
+    borderRadius: 14,
     borderWidth: 1.5,
-    marginTop: 6,
+    marginTop: 8,
   },
-  boutonTexte: { fontSize: 16, fontWeight: '700' },
-  label: { fontSize: 14, fontWeight: '600', color: C.texte, marginBottom: 6 },
+  boutonTexte: { fontSize: 16, fontWeight: '800' },
+  label: { fontSize: 14, fontWeight: '700', color: C.texte, marginBottom: 8 },
   input: {
     backgroundColor: C.blanc,
     borderWidth: 1,
     borderColor: C.bord,
-    borderRadius: 10,
-    paddingHorizontal: 12,
-    paddingVertical: 12,
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 13,
     fontSize: 16,
     color: C.texte,
   },
   puces: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  puce: { borderWidth: 1, borderColor: C.bord, backgroundColor: C.blanc, borderRadius: 20, paddingVertical: 8, paddingHorizontal: 14 },
-  puceTexte: { fontSize: 14, color: C.texte, fontWeight: '500' },
-  stat: { flex: 1, backgroundColor: C.blanc, borderRadius: 14, padding: 12, borderWidth: 1, borderColor: C.bord, alignItems: 'flex-start', gap: 4 },
-  statValeur: { fontSize: 17, fontWeight: '800', color: C.texte },
-  statLabel: { fontSize: 12, color: C.gris },
-  ligne: { flexDirection: 'row', alignItems: 'center', paddingVertical: 9, borderBottomWidth: 1, borderBottomColor: C.bord },
-  badge: { alignSelf: 'flex-start', borderRadius: 8, paddingHorizontal: 8, paddingVertical: 3 },
-  badgeTexte: { fontSize: 12, fontWeight: '700' },
+  puce: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    borderWidth: 1,
+    borderColor: C.bord,
+    backgroundColor: C.blanc,
+    borderRadius: 22,
+    paddingVertical: 9,
+    paddingHorizontal: 14,
+  },
+  puceTexte: { fontSize: 14, color: C.texte, fontWeight: '600' },
+  ligne: { flexDirection: 'row', alignItems: 'center', paddingVertical: 11, borderBottomWidth: 1, borderBottomColor: C.bord },
+  badge: { alignSelf: 'flex-start', borderRadius: 8, paddingHorizontal: 9, paddingVertical: 4 },
+  badgeTexte: { fontSize: 11, fontWeight: '800', letterSpacing: 0.5, textTransform: 'uppercase' },
+  numero: { backgroundColor: C.bleu, width: 30, height: 30, borderRadius: 15, alignItems: 'center', justifyContent: 'center' },
+  pastille: { backgroundColor: C.bleuClair, width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center' },
 });

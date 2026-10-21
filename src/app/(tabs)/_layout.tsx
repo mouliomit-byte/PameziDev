@@ -1,20 +1,24 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { Tabs } from 'expo-router';
+import { ColorValue } from 'react-native';
 
 import { C, IconName } from '@/components/ui';
 
-const icone =
-  (name: IconName) =>
-  ({ color, size }: { color: import("react-native").ColorValue; size: number }) => <Ionicons name={name} color={color as string} size={size} />;
+function icone(name: IconName) {
+  return function TabIcon({ color, size }: { color: ColorValue; size: number }) {
+    return <Ionicons name={name} color={color as string} size={size} />;
+  };
+}
 
 export default function TabsLayout() {
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: C.vert,
+        tabBarActiveTintColor: C.bleu,
         tabBarInactiveTintColor: C.gris,
-        tabBarLabelStyle: { fontWeight: '600' },
+        tabBarLabelStyle: { fontWeight: '700', fontSize: 11 },
+        tabBarStyle: { borderTopColor: C.bord },
       }}>
       <Tabs.Screen name="index" options={{ title: 'Accueil', tabBarIcon: icone('home') }} />
       <Tabs.Screen name="tontine" options={{ title: 'Tontine', tabBarIcon: icone('people') }} />

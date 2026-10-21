@@ -1,20 +1,41 @@
-# Pamezi — Mutuelle de santé du Noun
+# Mutuelle de Santé Pamezi
 
-**Ensemble pour une meilleure santé.** — *Votre santé, notre priorité.*
+**Ensemble pour une meilleure santé !** — *Votre santé, notre priorité !*
 
-Application multiplateforme (Android, iOS, Web) de la mutuelle de santé Pamezi, destinée aux
+Association déclarée — récépissé n° 195/RDA/F32DAPP, Préfecture du Noun, 25 juillet 2005.
+
+Application multiplateforme (Android, iOS, Web) de la Mutuelle de Santé Pamezi, destinée aux
 populations des villes et villages du département du Noun. La mutuelle fonctionne comme une
 **tontine pour la santé** : chaque membre cotise chaque mois dans une caisse solidaire qui paie une
 grande partie des soins quand un membre tombe malade. *Plus nous sommes nombreux, plus nous sommes forts.*
 
+## Objectifs de la mutuelle
+
+1. Promouvoir la prévoyance du risque maladie par l'organisation du financement des soins de santé.
+2. Promouvoir l'entraide et la solidarité au profit des membres.
+3. Organiser les actions de prévention des maladies.
+
+Objectif : **5 000 à 10 000 adhérents**. Convention de soins avec l'**Hôpital Nah Pôn**.
+
 ## Fonctionnalités
 
-- **Accueil** : présentation, chiffres de la communauté, fonctionnement, formules.
-- **Adhésion** : nom, téléphone (Mobile Money), arrondissement ou village du Noun, formule, bénéficiaires.
-- **Tontine santé** : participation, statut « à jour », caisse solidaire, objectif de membres, invitation d'un proche, historique.
-- **Cotisation** : 1, 3, 6 ou 12 mois via MTN Mobile Money, Orange Money ou collecteur, avec reçu.
-- **Soins** : demande de prise en charge avec calcul de la part Pamezi, plafond restant, formations sanitaires, conseils santé.
-- **Ma carte** : carte de membre numérique à présenter au centre de santé.
+- **Accueil** : identité Pamezi, objectifs, règles de la tontine, objectif d'adhérents, formules, partenaire de soins, contacts, mention légale.
+- **Adhésion** : individuelle ou via une association ; téléphone, arrondissement ou village du Noun, formule, ayants droit, acceptation des statuts.
+- **Tontine santé** : participation, statut « à jour », règles, invitation d'un proche, historique.
+- **Cotisation** : 1, 3, 6 ou 12 mois via MTN Mobile Money, Orange Money ou au bureau, avec reçu.
+- **Soins** : demande de prise en charge (part Pamezi / part du membre), plafond restant, centres de soins, prévention.
+- **Ma carte** : carte de membre numérique (numéro, formule, ayants droit, statut).
+
+## Identité visuelle
+
+Bleu Pamezi `#0B5FB0`, logo « M » cerclé, filet vert-rouge-jaune aux couleurs du Cameroun
+(repris de l'affiche officielle). Couleurs dans `src/components/ui.tsx`, icônes dans `assets/`.
+
+## Contacts
+
+- mutuelledesantepamezi@gmail.com
+- Facebook : https://www.facebook.com/profile.php?id=6159412983404
+- Instagram : https://www.instagram.com/mutuelledesantepamezi/
 
 | Formule | Cotisation | Personnes | Prise en charge | Plafond annuel |
 |---|---|---|---|---|
@@ -31,6 +52,7 @@ npm install
 npx expo start        # puis « a » (Android), « i » (iOS) ou « w » (Web)
 npm run build:web     # version Web statique dans dist/
 npm run typecheck
+npm run lint
 ```
 
 Sur téléphone : installer **Expo Go** et scanner le QR code affiché.
@@ -40,7 +62,6 @@ Pour publier sur les stores : `npx eas-cli@latest build`.
 
 - Les données sont enregistrées **sur l'appareil** (pas encore de serveur).
 - Les paiements Mobile Money sont **simulés** : aucun argent n'est prélevé.
-- Les chiffres de la communauté (membres, caisse) sont des valeurs de démonstration.
 
 Prochaines étapes : serveur commun (membres, caisse, demandes), API MTN MoMo / Orange Money,
 espace délégués et gestionnaires, validation des demandes par les centres de santé.
