@@ -17,14 +17,31 @@ grande partie des soins quand un membre tombe malade. *Plus nous sommes nombreux
 
 Objectif : **5 000 à 10 000 adhérents**. Convention de soins avec l'**Hôpital Nah Pôn**.
 
-## Fonctionnalités
+## Les trois parties
 
-- **Accueil** : identité Pamezi, objectifs, règles de la tontine, objectif d'adhérents, formules, partenaire de soins, contacts, mention légale.
-- **Adhésion** : individuelle ou via une association ; téléphone, arrondissement ou village du Noun, formule, ayants droit, acceptation des statuts.
-- **Tontine santé** : participation, statut « à jour », règles, invitation d'un proche, historique.
-- **Cotisation** : 1, 3, 6 ou 12 mois via MTN Mobile Money, Orange Money ou au bureau, avec reçu.
-- **Soins** : demande de prise en charge (part Pamezi / part du membre), plafond restant, centres de soins, prévention.
-- **Ma carte** : carte de membre numérique (numéro, formule, ayants droit, statut).
+| Partie | Pour qui | Où |
+|---|---|---|
+| **Application membre** | Les adhérents | Android, iPhone, Web |
+| **Back office** (`/admin`) | Le propriétaire et les gestionnaires | Même application : Android, iPhone, Web (ordinateur) |
+| **Serveur (back-end)** | — | `server/` : API + base de données + hébergement du site Web |
+
+### Application membre
+- **Accueil** : identité Pamezi, objectifs, règles de la tontine, formules, partenaire de soins, contacts.
+- **Adhésion** : individuelle ou via une association, formule, ayants droit, **code secret à 4 chiffres**.
+- **Connexion** : numéro de téléphone + code secret (pour retrouver son compte sur un autre téléphone).
+- **Cotisation** : 1 à 12 mois. Mobile Money : confirmé tout de suite (simulé pour l'instant). Espèces : en attente jusqu'à confirmation par le bureau.
+- **Soins** : demande de prise en charge, statut suivi (en cours, validée, payée, rejetée), plafond restant.
+- **Ma carte** : carte de membre numérique ; statut (actif, en retard, suspendu).
+
+### Back office (propriétaire et gestionnaires)
+- **Tableau de bord** : adhérents, à jour, cotisations encaissées, soins payés, solde de la caisse, objectif 5 000 à 10 000, encaissements par mois, adhérents par localité et par formule.
+- **Membres** : recherche, filtres, fiche complète, suspendre / réactiver / démission, changer de formule, **encaisser des espèces au bureau**, remplacer un code secret oublié, **export Excel (CSV)**.
+- **Cotisations** : confirmer ou rejeter les paiements en espèces déclarés.
+- **Demandes de soins** : valider, rejeter, marquer comme payée, avec commentaire.
+- **Paramètres** : formules (cotisation, taux, plafond, garanties, visibilité), centres de soins (convention signée ou non), comptes gestionnaires.
+- **Journal** : chaque action du back office est tracée (qui, quoi, quand).
+
+Rôles : le **propriétaire** peut tout faire ; un **gestionnaire** gère membres, cotisations, demandes et centres, mais ne modifie ni les formules ni les comptes.
 
 ## Identité visuelle
 
@@ -45,37 +62,98 @@ Bleu Pamezi `#0070C6` (dégradé `#1580DB` → `#084A88`), titres `#0B59A3`, log
 
 Montants, taux et liste des centres sont des **valeurs de départ** à ajuster dans `src/lib/data.ts`.
 
-## Lancer l'application
+## Lancer en local
+
+Prérequis : Node.js 22.18 ou plus récent.
 
 ```bash
-npm install
-npx expo start        # puis « a » (Android), « i » (iOS) ou « w » (Web)
-npm run build:web     # version Web statique dans dist/
-npm run build:artifact # version Web en un seul fichier HTML (dist-artifact/), pour un artefact
-npm run typecheck
-npm run lint
+npm install                 # application
+npm --prefix server install # serveur
+
+# 1) Tout-en-un : serveur + site Web (membres et back office) sur http://localhost:8787
+npm run build:web           # construit le site branché sur l'API du même serveur
+ADMIN_EMAIL=vous@exemple.cm ADMIN_MOT_DE_PASSE='un-mot-de-passe-solide' npm run serveur
+
+# 2) Application mobile branchée sur le serveur (Expo Go ou build EAS)
+EXPO_PUBLIC_API_URL=http://<adresse-du-serveur>:8787 npx expo start
+
+# 3) Sans serveur : mode démonstration (données sur l'appareil, membres d'exemple)
+npx expo start
 ```
 
-Sur téléphone : installer **Expo Go** et scanner le QR code affiché.
-Pour publier sur les stores : `npx eas-cli@latest build`.
+Back office : ouvrir `/admin` (lien « Espace gestionnaire » en bas de l'accueil).
+En démonstration : `proprietaire@pamezi.cm` / `demo-pamezi`.
 
-## État actuel (démonstration)
+Vérifications :
 
-- Les données sont enregistrées **sur l'appareil** (pas encore de serveur).
-- Les paiements Mobile Money sont **simulés** : aucun argent n'est prélevé.
+```bash
+npm run typecheck && npm run lint   # application
+npm run serveur:test                # 18 tests de l'API (adhésion → back office)
+```
 
-Prochaines étapes : serveur commun (membres, caisse, demandes), API MTN MoMo / Orange Money,
-espace délégués et gestionnaires, validation des demandes par les centres de santé.
+## Déployer en production
+
+1. **Serveur** (VPS, Hostinger Node.js, Render, Railway…) : copier le projet, `npm --prefix server install`,
+   `npm run build:web`, puis lancer `npm run serveur` derrière HTTPS avec les variables :
+
+   | Variable | Rôle |
+   |---|---|
+   | `PORT` | Port d'écoute (8787 par défaut) |
+   | `PAMEZI_DONNEES` | Dossier de la base SQLite — **à sauvegarder régulièrement** |
+   | `ADMIN_EMAIL`, `ADMIN_MOT_DE_PASSE`, `ADMIN_NOM` | Compte propriétaire créé au premier démarrage |
+   | `PAMEZI_SECRET` | Clé de signature des sessions (sinon générée dans le dossier de données) |
+   | `CORS_ORIGINES` | Origines autorisées, séparées par des virgules (toutes par défaut) |
+
+2. **Applications Android / iPhone** : définir `EXPO_PUBLIC_API_URL=https://votre-domaine` (fichier `.env`,
+   voir `.env.example`, ou variables EAS), puis `npx eas-cli@latest build`.
+
+## API
+
+Toutes les routes sont sous `/api`. Membres : jeton de session (90 jours). Back office : jeton de 12 heures.
+
+| Méthode | Route | Rôle |
+|---|---|---|
+| GET | `/sante`, `/formules`, `/centres`, `/stats` | Public |
+| POST | `/membres` | Adhésion (renvoie jeton + profil) |
+| POST | `/membres/connexion` | Connexion téléphone + code secret |
+| GET | `/moi` | Profil du membre (cotisations, demandes, situation) |
+| POST | `/moi/cotisations`, `/moi/demandes` | Cotiser, demander une prise en charge |
+| POST | `/admin/connexion` | Connexion back office |
+| GET | `/admin/tableau-de-bord` | Statistiques |
+| GET/PATCH | `/admin/membres`, `/admin/membres/:id` | Liste, fiche, modification |
+| POST | `/admin/membres/:id/especes`, `/admin/membres/:id/pin` | Encaisser des espèces, nouveau code |
+| GET | `/admin/membres.csv` | Export Excel |
+| GET/POST | `/admin/cotisations`, `/admin/cotisations/:id/decision` | Confirmer / rejeter |
+| GET/POST | `/admin/demandes`, `/admin/demandes/:id/decision` | Valider / rejeter / payer |
+| GET/PUT | `/admin/formules`, `/admin/centres` | Paramètres (DELETE `/admin/centres/:id`) |
+| GET/POST/PATCH | `/admin/gestionnaires` | Comptes du back office |
+| GET | `/admin/journal` | Historique des actions |
+
+Sécurité : codes secrets et mots de passe chiffrés (scrypt), sessions signées (HMAC-SHA256),
+blocage après 10 tentatives de connexion en 15 minutes, taille des requêtes limitée, en-têtes de sécurité.
+
+## Encore à faire avant le lancement
+
+- **Paiement Mobile Money réel** : brancher l'API MTN MoMo / Orange Money (aujourd'hui simulé et confirmé d'office).
+- **SMS** : envoyer le code secret ou les confirmations par SMS.
+- Valider avec le bureau les montants des formules, les taux et la liste des centres (barème indicatif).
 
 ## Structure
 
 ```
-src/app/            écrans (Expo Router)
-  (tabs)/           Accueil, Tontine, Soins, Ma carte
-  adhesion.tsx      formulaire d'adhésion
-  cotiser.tsx       paiement de cotisation
-  demande.tsx       demande de prise en charge
-src/components/ui.tsx  composants et couleurs
-src/lib/data.ts     formules, localités, centres
-src/lib/store.tsx   état de l'application (sauvegardé sur l'appareil)
+shared/                 règles métier et service, communs au serveur et à l'application
+  regles.ts             types, calculs (situation, prise en charge, statistiques)
+  service.ts            opérations : adhésion, cotisation, demandes, back office
+  depot-memoire.ts      stockage en mémoire (mode démonstration, tests)
+server/                 back-end Node.js (Hono + SQLite intégré à Node)
+  src/app.ts            routes de l'API
+  src/depot-sqlite.ts   stockage SQLite
+  src/securite.ts       chiffrement, jetons, limitation des tentatives
+  test/api.test.ts      tests de bout en bout de l'API
+src/app/                écrans (Expo Router)
+  (tabs)/               Accueil, Tontine, Soins, Ma carte
+  adhesion, connexion, cotiser, demande
+  admin/                back office : tableau de bord, membres, cotisations, demandes, paramètres, journal
+src/lib/                api.ts (HTTP ou démonstration), store.tsx (session membre), admin.tsx (session back office)
+src/components/         composants d'interface
 ```

@@ -4,10 +4,12 @@ import { Text, View } from 'react-native';
 
 import { Bouton, C, Carte, Degrade, Ecran, Ligne, Logo, s, Section, Titre, Tricolore, Vide } from '@/components/ui';
 import { CONTACTS, dateFr, SLOGAN } from '@/lib/data';
-import { situation, usePamezi } from '@/lib/store';
+import { useActualiserAuFocus, usePamezi } from '@/lib/store';
+import { formaterTelephone, LIBELLE_STATUT_MEMBRE } from '@shared/regles';
 
 export default function Profil() {
-  const { membre, formule, cotisations, reinitialiser } = usePamezi();
+  const { membre, formule, situation: sit, deconnecter } = usePamezi();
+  useActualiserAuFocus();
   const [confirmer, setConfirmer] = useState(false);
 
   if (!membre || !formule) {
@@ -16,12 +18,12 @@ export default function Profil() {
         <Titre>Ma carte</Titre>
         <Vide icone="card" texte="Votre carte de membre apparaîtra ici après votre adhésion.">
           <Bouton titre="Adhérer" icone="person-add" onPress={() => router.push('/adhesion')} />
+          <Bouton titre="Déjà membre ? Se connecter" icone="log-in" variante="contour" onPress={() => router.push('/connexion')} />
         </Vide>
       </Ecran>
     );
   }
 
-  const sit = situation(membre, cotisations);
 
   return (
     <Ecran>
@@ -43,7 +45,11 @@ export default function Profil() {
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 20 }}>
             <Info titre="FORMULE" valeur={formule.nom} />
             <Info titre="AYANTS DROIT" valeur={String(membre.ayantsDroit)} />
-            <Info titre="STATUT" valeur={sit.aJour ? 'Actif' : 'Suspendu'} couleur={sit.aJour ? C.jaune : '#FFB4A8'} />
+            <Info
+              titre="STATUT"
+              valeur={membre.statut !== 'actif' ? LIBELLE_STATUT_MEMBRE[membre.statut] : sit.aJour ? 'Actif' : 'En retard'}
+              couleur={membre.statut === 'actif' && sit.aJour ? C.jaune : '#FFB4A8'}
+            />
           </View>
         </View>
         <View style={{ backgroundColor: 'rgba(4,40,80,0.45)', paddingHorizontal: 20, paddingVertical: 10, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -54,7 +60,7 @@ export default function Profil() {
 
       <Section icone="person">Mes informations</Section>
       <Carte style={{ paddingVertical: 6 }}>
-        <Ligne icone="call" gauche="Téléphone" droite={membre.telephone} />
+        <Ligne icone="call" gauche="Téléphone" droite={formaterTelephone(membre.telephone)} />
         <Ligne icone="location" gauche="Localité" droite={membre.localite} />
         <Ligne
           icone="people-circle"
@@ -75,8 +81,8 @@ export default function Profil() {
 
       {confirmer ? (
         <Carte style={{ borderWidth: 1, borderColor: C.rouge }}>
-          <Text style={s.texte}>Effacer les données Pamezi de cet appareil ? Votre adhésion n’est pas annulée.</Text>
-          <Bouton titre="Oui, effacer" variante="danger" onPress={() => { reinitialiser(); setConfirmer(false); }} />
+          <Text style={s.texte}>Se déconnecter de cet appareil ? Votre adhésion reste active : vous pourrez vous reconnecter avec votre numéro et votre code secret.</Text>
+          <Bouton titre="Me déconnecter" variante="danger" onPress={() => { deconnecter(); setConfirmer(false); }} />
           <Bouton titre="Annuler" variante="contour" onPress={() => setConfirmer(false)} />
         </Carte>
       ) : (

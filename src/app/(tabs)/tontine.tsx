@@ -4,10 +4,12 @@ import { Share, Text, View } from 'react-native';
 
 import { Badge, Bouton, C, Carte, Degrade, Ecran, Ligne, s, Section, Titre, Vide } from '@/components/ui';
 import { CONTACTS, dateFr, fcfa, nombre, OBJECTIF_ADHERENTS, SLOGAN, SOLIDARITE } from '@/lib/data';
-import { situation, usePamezi } from '@/lib/store';
+import { useActualiserAuFocus, usePamezi } from '@/lib/store';
+import { LIBELLE_STATUT_COTISATION } from '@shared/regles';
 
 export default function Tontine() {
-  const { membre, formule, cotisations, totalCotise, invitations, inviter } = usePamezi();
+  const { membre, formule, cotisations, situation: sit, totalCotise, invitations, inviter } = usePamezi();
+  useActualiserAuFocus();
 
   if (!membre || !formule) {
     return (
@@ -20,7 +22,6 @@ export default function Tontine() {
     );
   }
 
-  const sit = situation(membre, cotisations);
 
   const partager = async () => {
     try {
@@ -96,7 +97,13 @@ export default function Tontine() {
                   {dateFr(c.date)} · {c.mode}
                 </Text>
               </View>
-              <Badge texte={fcfa(c.montant)} couleur={C.vert} />
+              <View style={{ alignItems: 'flex-end', gap: 4 }}>
+                <Text style={[s.texte, { fontWeight: '800' }]}>{fcfa(c.montant)}</Text>
+                <Badge
+                  texte={LIBELLE_STATUT_COTISATION[c.statut]}
+                  couleur={c.statut === 'confirmee' ? C.vert : c.statut === 'rejetee' ? C.rouge : '#B7791F'}
+                />
+              </View>
             </View>
           ))}
         </Carte>

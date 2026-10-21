@@ -9,7 +9,10 @@ const DIST = 'dist';
 const OUT_DIR = 'dist-artifact';
 const MIME = { '.png': 'image/png', '.ttf': 'font/ttf', '.jpg': 'image/jpeg', '.svg': 'image/svg+xml' };
 
-execSync('npx expo export --platform web', { stdio: 'inherit' });
+// L'artefact ne peut joindre aucun serveur : il est toujours construit en mode démonstration.
+const env = { ...process.env };
+delete env.EXPO_PUBLIC_API_URL;
+execSync('npx expo export --platform web --clear', { stdio: 'inherit', env });
 
 const html = fs.readFileSync(path.join(DIST, 'index.html'), 'utf8');
 const scripts = [...html.matchAll(/<script src="([^"]+)"/g)].map((m) => m[1]);

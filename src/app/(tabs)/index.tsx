@@ -1,14 +1,12 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { router } from 'expo-router';
+import { Link, router } from 'expo-router';
 import { Linking, Pressable, Text, View } from 'react-native';
 
 import { Badge, Bouton, C, Carte, Degrade, Ecran, IconName, Logo, Numero, s, Section, Tricolore } from '@/components/ui';
 import {
-  CENTRES,
   CONTACTS,
   DEVISE,
   fcfa,
-  FORMULES,
   nombre,
   OBJECTIF_ADHERENTS,
   OBJECTIFS,
@@ -17,12 +15,11 @@ import {
   SLOGAN,
   SOLIDARITE,
 } from '@/lib/data';
-import { situation, usePamezi } from '@/lib/store';
+import { usePamezi } from '@/lib/store';
 
 export default function Accueil() {
-  const { membre, formule, cotisations } = usePamezi();
-  const sit = situation(membre, cotisations);
-  const partenaire = CENTRES[0];
+  const { membre, formule, situation: sit, formules, centres } = usePamezi();
+  const partenaire = centres.find((c) => c.conventionne) ?? centres[0];
 
   return (
     <Ecran>
@@ -72,6 +69,7 @@ export default function Accueil() {
             Cotisez chaque mois pour vous et votre famille, et soyez pris en charge en cas de maladie.
           </Text>
           <Bouton titre="Adhérer maintenant" icone="person-add" onPress={() => router.push('/adhesion')} />
+          <Bouton titre="Déjà membre ? Se connecter" icone="log-in" variante="contour" onPress={() => router.push('/connexion')} />
         </Carte>
       )}
 
@@ -116,7 +114,7 @@ export default function Accueil() {
 
       {/* Formules */}
       <Section icone="pricetags">Nos formules</Section>
-      {FORMULES.map((f) => (
+      {formules.map((f) => (
         <Carte key={f.id} style={f.id === 'famille' ? { borderWidth: 2, borderColor: C.bleu } : undefined}>
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' }}>
             <View>
@@ -146,6 +144,8 @@ export default function Accueil() {
       </Text>
 
       {/* Partenaire de soins */}
+      {partenaire ? (
+        <>
       <Section icone="medkit">Notre partenaire de soins</Section>
       <Carte>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
@@ -168,6 +168,8 @@ export default function Accueil() {
           D’autres centres de santé et cliniques de la ville seront approchés, pour des soins toujours plus proches de vous.
         </Text>
       </Carte>
+        </>
+      ) : null}
 
       {/* Contacts */}
       <Section icone="chatbubbles">Nous contacter</Section>
@@ -185,6 +187,9 @@ export default function Accueil() {
           Association déclarée · Récépissé n° {RECEPISSE.numero}{'\n'}
           {RECEPISSE.autorite}, {RECEPISSE.date}
         </Text>
+        <Link href="/admin" style={[s.petit, { color: C.bleu, fontWeight: '700', marginTop: 6 }]}>
+          Espace gestionnaire
+        </Link>
       </View>
     </Ecran>
   );

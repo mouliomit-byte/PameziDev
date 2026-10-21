@@ -3,15 +3,18 @@ import { router } from 'expo-router';
 import { useState } from 'react';
 import { Text, View } from 'react-native';
 
-import { Bouton, C, Carte, Champ, Choix, Ecran, Ligne, s, Vide } from '@/components/ui';
-import { CENTRES, fcfa, MOTIFS } from '@/lib/data';
-import { Demande as D, situation, usePamezi } from '@/lib/store';
-
-const CENTRES_OUVERTS = CENTRES.filter((c) => c.conventionne).map((c) => c.nom);
+import { Alerte, Bouton, C, Carte, Champ, Choix, Ecran, Ligne, s, Vide } from '@/components/ui';
+import { fcfa } from '@/lib/data';
+import { messageErreur, usePamezi } from '@/lib/store';
+import { calculerPriseEnCharge, type Demande as D, MOTIFS } from '@shared/regles';
 
 export default function Demande() {
-  const { membre, formule, cotisations, plafondRestant, demander } = usePamezi();
-  const [centre, setCentre] = useState<string | null>(CENTRES_OUVERTS.length === 1 ? CENTRES_OUVERTS[0] : null);
+  const { membre, formule, situation, plafondRestant, demander, centres } = usePamezi();
+  const centresOuverts = centres.filter((c) => c.conventionne).map((c) => c.nom);
+  const [choixCentre, setCentre] = useState<string | null>(null);
+  const centre = choixCentre ?? (centresOuverts.length === 1 ? centresOuverts[0] : null);
+  const [envoi, setEnvoi] = useState(false);
+  const [erreur, setErreur] = useState<string | null>(null);
   const [motif, setMotif] = useState<string | null>(null);
   const [montant, setMontant] = useState('');
   const [envoyee, setEnvoyee] = useState<D | null>(null);
@@ -26,7 +29,15 @@ export default function Demande() {
     );
   }
 
-  if (!situation(membre, cotisations).aJour) {
+  if (membre.statut !== 'actif') {
+    return (
+      <Ecran bords={['bottom']}>
+        <Vide icone="alert-circle" texte="Votre adhésion est suspendue. Contactez la mutuelle pour la réactiver." />
+      </Ecran>
+    );
+  }
+
+  if (!situation.aJour) {
     return (
       <Ecran bords={['bottom']}>
         <Vide icone="alert-circle" texte="Vos cotisations ne sont pas à jour. Régularisez-les pour être pris en charge.">
@@ -44,7 +55,7 @@ export default function Demande() {
             <Ionicons name="paper-plane" size={36} color={C.bleu} />
           </View>
           <Text style={[s.h2, { marginTop: 12 }]}>Demande transmise</Text>
-          <Text style={[s.petit, { textAlign: 'center' }]}>Elle sera examinée par la mutuelle et le centre de soins.</Text>
+          <Text style={[s.petit, { textAlign: 'center' }]}>Elle sera examinée par la mutuelle. Suivez son statut dans l’onglet Soins.</Text>
         </Carte>
         <Carte style={{ paddingVertical: 6 }}>
           <Ligne gauche="Facture" droite={fcfa(envoyee.montant)} />
@@ -57,11 +68,11 @@ export default function Demande() {
   }
 
   const m = parseInt(montant.replace(/\D/g, ''), 10) || 0;
-  const estimation = Math.min(Math.round((m * formule.taux) / 100), plafondRestant);
+  const estimation = calculerPriseEnCharge(m, formule.taux, plafondRestant);
 
   return (
     <Ecran bords={['bottom']}>
-      <Choix label="Centre de soins" options={CENTRES_OUVERTS} valeur={centre} onChange={setCentre} />
+      <Choix label="Centre de soins" options={centresOuverts} valeur={centre} onChange={setCentre} />
       <Choix label="Motif" options={MOTIFS} valeur={motif} onChange={setMotif} />
       <Champ label="Montant de la facture (FCFA)" value={montant} onChangeText={setMontant} keyboardType="number-pad" placeholder="Ex. : 15000" />
 
@@ -81,11 +92,23 @@ export default function Demande() {
         </Carte>
       ) : null}
 
+      <Alerte texte={erreur} />
       <Bouton
-        titre="Envoyer la demande"
+        titre={envoi ? 'Envoi en cours…' : 'Envoyer la demande'}
         icone="send"
-        desactive={!centre || !motif || m <= 0}
-        onPress={() => centre && motif && setEnvoyee(demander({ centre, motif, montant: m }))}
+        desactive={!centre || !motif || m <= 0 || envoi}
+        onPress={async () => {
+          if (!centre || !motif) return;
+          setEnvoi(true);
+          setErreur(null);
+          try {
+            setEnvoyee(await demander({ centre, motif, montant: m }));
+          } catch (e) {
+            setErreur(messageErreur(e));
+          } finally {
+            setEnvoi(false);
+          }
+        }}
       />
     </Ecran>
   );

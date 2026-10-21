@@ -1,120 +1,150 @@
+// Session du membre : jeton, profil (membre, cotisations, demandes…) et données publiques.
+// Les données viennent de l'API (serveur ou mode démonstration, voir api.ts) ;
+// une copie est gardée sur l'appareil pour s'afficher même sans réseau.
+
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { createContext, ReactNode, useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import { useFocusEffect } from 'expo-router';
+import { createContext, ReactNode, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 
-import { FORMULES, FormuleId, ModePaiement } from './data';
+import {
+  type Centre,
+  CENTRES_DEPART,
+  type Cotisation,
+  type Demande,
+  type Formule,
+  FORMULES_DEPART,
+  type Membre,
+  type ModePaiement,
+  type Profil,
+  type Situation,
+} from '@shared/regles';
+import type { DonneesAdhesion } from '@shared/service';
 
-export type Membre = {
-  numero: string;
-  nom: string;
-  telephone: string;
-  localite: string;
-  typeAdhesion: 'Individuelle' | 'Via une association';
-  association?: string;
-  formule: FormuleId;
-  ayantsDroit: number;
-  dateAdhesion: string;
-};
+import { api, ErreurApi } from './api';
 
-export type Cotisation = { id: string; date: string; montant: number; mode: ModePaiement; mois: number };
+const CLE = 'pamezi:session:v3';
 
-export type Demande = {
-  id: string;
-  date: string;
-  centre: string;
-  motif: string;
-  montant: number;
-  priseEnCharge: number;
-  statut: 'En cours' | 'Validée' | 'Payée';
-};
+type Session = { jeton: string | null; profil: Profil | null; invitations: number };
+const VIDE: Session = { jeton: null, profil: null, invitations: 0 };
 
-type Etat = { membre: Membre | null; cotisations: Cotisation[]; demandes: Demande[]; invitations: number };
-
-const VIDE: Etat = { membre: null, cotisations: [], demandes: [], invitations: 0 };
-const CLE = 'pamezi:etat:v2';
-
-type Ctx = Etat & {
+type Ctx = {
   pret: boolean;
-  formule: (typeof FORMULES)[number] | undefined;
+  modeDemo: boolean;
+  membre: Membre | null;
+  formule: Formule | null;
+  cotisations: Cotisation[];
+  demandes: Demande[];
+  situation: Situation;
   totalCotise: number;
   totalRembourse: number;
   plafondRestant: number;
-  adherer: (m: Omit<Membre, 'numero' | 'dateAdhesion'>) => void;
-  cotiser: (mois: number, mode: ModePaiement) => Cotisation | null;
-  demander: (d: { centre: string; motif: string; montant: number }) => Demande | null;
+  formules: Formule[];
+  centres: Centre[];
+  invitations: number;
+  adherer: (d: DonneesAdhesion) => Promise<void>;
+  connecter: (telephone: string, pin: string) => Promise<void>;
+  cotiser: (mois: number, mode: ModePaiement) => Promise<Cotisation>;
+  demander: (d: { centre: string; motif: string; montant: number }) => Promise<Demande>;
+  rafraichir: () => Promise<void>;
   inviter: () => void;
-  reinitialiser: () => void;
+  deconnecter: () => void;
 };
 
 const Contexte = createContext<Ctx | null>(null);
 
-const id = () => Math.random().toString(36).slice(2, 10);
-
 export function PameziProvider({ children }: { children: ReactNode }) {
-  const [etat, setEtat] = useState<Etat>(VIDE);
+  const [session, setSession] = useState<Session>(VIDE);
   const [pret, setPret] = useState(false);
+  const [formules, setFormules] = useState<Formule[]>(FORMULES_DEPART);
+  const [centres, setCentres] = useState<Centre[]>(CENTRES_DEPART);
 
-  useEffect(() => {
-    AsyncStorage.getItem(CLE)
-      .then((v) => v && setEtat({ ...VIDE, ...JSON.parse(v) }))
-      .catch(() => {})
-      .finally(() => setPret(true));
-  }, []);
-
-  const maj = useCallback((f: (e: Etat) => Etat) => {
-    setEtat((e) => {
-      const n = f(e);
+  const maj = useCallback((f: (s: Session) => Session) => {
+    setSession((s) => {
+      const n = f(s);
       AsyncStorage.setItem(CLE, JSON.stringify(n)).catch(() => {});
       return n;
     });
   }, []);
 
-  const formule = FORMULES.find((f) => f.id === etat.membre?.formule);
-  const totalCotise = etat.cotisations.reduce((s, c) => s + c.montant, 0);
-  const totalRembourse = etat.demandes.reduce((s, d) => s + d.priseEnCharge, 0);
-  const plafondRestant = Math.max(0, (formule?.plafond ?? 0) - totalRembourse);
+  const recevoirProfil = useCallback((profil: Profil, jeton?: string) => maj((s) => ({ ...s, profil, jeton: jeton ?? s.jeton })), [maj]);
 
-  const valeur = useMemo<Ctx>(
-    () => ({
-      ...etat,
+  // Chargement : session gardée sur l'appareil, puis mise à jour depuis l'API.
+  useEffect(() => {
+    let actif = true;
+    (async () => {
+      let jeton: string | null = null;
+      try {
+        const brut = await AsyncStorage.getItem(CLE);
+        if (brut && actif) {
+          const s = { ...VIDE, ...JSON.parse(brut) } as Session;
+          jeton = s.jeton;
+          setSession(s);
+        }
+      } catch {}
+      if (actif) setPret(true);
+      api.formules().then((f) => actif && f.length && setFormules(f)).catch(() => {});
+      api.centres().then((c) => actif && c.length && setCentres(c)).catch(() => {});
+      if (jeton) {
+        try {
+          const profil = await api.membre.profil(jeton);
+          if (actif) recevoirProfil(profil);
+        } catch (e) {
+          // Session refusée (expirée, compte fermé) : on se déconnecte. Erreur réseau : on garde la copie locale.
+          if (actif && e instanceof ErreurApi && (e.statut === 401 || e.statut === 403 || e.statut === 404)) maj(() => VIDE);
+        }
+      }
+    })();
+    return () => {
+      actif = false;
+    };
+  }, [maj, recevoirProfil]);
+
+  const exigerJeton = useCallback(() => {
+    if (!session.jeton) throw new ErreurApi(401, 'Connectez-vous d’abord.');
+    return session.jeton;
+  }, [session.jeton]);
+
+  const valeur = useMemo<Ctx>(() => {
+    const p = session.profil;
+    return {
       pret,
-      formule,
-      totalCotise,
-      totalRembourse,
-      plafondRestant,
-      adherer: (m) =>
-        maj((e) => ({
-          ...e,
-          membre: {
-            ...m,
-            numero: `PMZ-${new Date().getFullYear()}-${String(Math.floor(Math.random() * 1e5)).padStart(5, '0')}`,
-            dateAdhesion: new Date().toISOString(),
-          },
-        })),
-      cotiser: (mois, mode) => {
-        if (!formule) return null;
-        const c: Cotisation = { id: id(), date: new Date().toISOString(), montant: formule.cotisation * mois, mode, mois };
-        maj((e) => ({ ...e, cotisations: [c, ...e.cotisations] }));
-        return c;
+      modeDemo: api.mode === 'demo',
+      membre: p?.membre ?? null,
+      formule: p?.formule ?? null,
+      cotisations: p?.cotisations ?? [],
+      demandes: p?.demandes ?? [],
+      situation: p?.situation ?? { moisPayes: 0, moisDus: 0, aJour: false, enAttente: 0 },
+      totalCotise: p?.totalCotise ?? 0,
+      totalRembourse: p?.totalPrisEnCharge ?? 0,
+      plafondRestant: p?.plafondRestant ?? 0,
+      formules,
+      centres,
+      invitations: session.invitations,
+      adherer: async (d) => {
+        const r = await api.membre.adherer(d);
+        recevoirProfil(r.profil, r.jeton);
       },
-      demander: ({ centre, motif, montant }) => {
-        if (!formule) return null;
-        const d: Demande = {
-          id: id(),
-          date: new Date().toISOString(),
-          centre,
-          motif,
-          montant,
-          priseEnCharge: Math.min(Math.round((montant * formule.taux) / 100), plafondRestant),
-          statut: 'En cours',
-        };
-        maj((e) => ({ ...e, demandes: [d, ...e.demandes] }));
-        return d;
+      connecter: async (telephone, pin) => {
+        const r = await api.membre.connecter(telephone, pin);
+        recevoirProfil(r.profil, r.jeton);
       },
-      inviter: () => maj((e) => ({ ...e, invitations: e.invitations + 1 })),
-      reinitialiser: () => maj(() => VIDE),
-    }),
-    [etat, pret, formule, totalCotise, totalRembourse, plafondRestant, maj],
-  );
+      cotiser: async (mois, mode) => {
+        const r = await api.membre.cotiser(exigerJeton(), mois, mode);
+        recevoirProfil(r.profil);
+        return r.cotisation;
+      },
+      demander: async (d) => {
+        const r = await api.membre.demander(exigerJeton(), d);
+        recevoirProfil(r.profil);
+        return r.demande;
+      },
+      rafraichir: async () => {
+        if (session.jeton) recevoirProfil(await api.membre.profil(session.jeton));
+      },
+      inviter: () => maj((s) => ({ ...s, invitations: s.invitations + 1 })),
+      deconnecter: () => maj(() => VIDE),
+    };
+  }, [session, pret, formules, centres, maj, recevoirProfil, exigerJeton]);
 
   return <Contexte.Provider value={valeur}>{children}</Contexte.Provider>;
 }
@@ -125,12 +155,21 @@ export function usePamezi() {
   return c;
 }
 
-/** Mois couverts par les cotisations depuis l'adhésion : à jour si >= mois écoulés. */
-export function situation(membre: Membre | null, cotisations: Cotisation[]) {
-  if (!membre) return { moisPayes: 0, moisDus: 0, aJour: false };
-  const debut = new Date(membre.dateAdhesion);
-  const now = new Date();
-  const moisDus = (now.getFullYear() - debut.getFullYear()) * 12 + now.getMonth() - debut.getMonth() + 1;
-  const moisPayes = cotisations.reduce((s, c) => s + c.mois, 0);
-  return { moisPayes, moisDus, aJour: moisPayes >= moisDus };
+/** Actualise le profil chaque fois que l'écran reprend le focus (décisions prises dans le back office). */
+export function useActualiserAuFocus() {
+  const { rafraichir } = usePamezi();
+  const ref = useRef(rafraichir);
+  useEffect(() => {
+    ref.current = rafraichir;
+  });
+  useFocusEffect(
+    useCallback(() => {
+      ref.current().catch(() => {});
+    }, []),
+  );
+}
+
+/** Message lisible pour une erreur d'API ou inattendue. */
+export function messageErreur(e: unknown): string {
+  return e instanceof Error && e.message ? e.message : 'Une erreur est survenue. Réessayez.';
 }

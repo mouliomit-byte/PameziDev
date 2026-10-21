@@ -3,8 +3,9 @@ import { router } from 'expo-router';
 import { Text, View } from 'react-native';
 
 import { Badge, Bouton, C, Carte, Ecran, s, Section, Titre, Vide } from '@/components/ui';
-import { CENTRES, dateFr, DEVISE, fcfa } from '@/lib/data';
-import { usePamezi } from '@/lib/store';
+import { dateFr, DEVISE, fcfa } from '@/lib/data';
+import { useActualiserAuFocus, usePamezi } from '@/lib/store';
+import { LIBELLE_STATUT_DEMANDE } from '@shared/regles';
 
 const PREVENTION = [
   { icone: 'water', texte: 'Buvez une eau propre : faites-la bouillir ou traitez-la.' },
@@ -15,7 +16,8 @@ const PREVENTION = [
 ] as const;
 
 export default function Soins() {
-  const { membre, formule, demandes, totalRembourse, plafondRestant } = usePamezi();
+  const { membre, formule, demandes, totalRembourse, plafondRestant, centres } = usePamezi();
+  useActualiserAuFocus();
 
   return (
     <Ecran>
@@ -43,7 +45,10 @@ export default function Soins() {
               <Carte key={d.id}>
                 <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
                   <Text style={[s.texte, { fontWeight: '800' }]}>{d.motif}</Text>
-                  <Badge texte={d.statut} couleur={d.statut === 'En cours' ? '#B7791F' : C.vert} />
+                  <Badge
+                    texte={LIBELLE_STATUT_DEMANDE[d.statut]}
+                    couleur={d.statut === 'en_cours' ? '#B7791F' : d.statut === 'rejetee' ? C.rouge : C.vert}
+                  />
                 </View>
                 <Text style={s.petit}>
                   {d.centre} · {dateFr(d.date)}
@@ -64,7 +69,7 @@ export default function Soins() {
       )}
 
       <Section icone="business">Centres de soins</Section>
-      {CENTRES.map((c) => (
+      {centres.map((c) => (
         <Carte key={c.nom} style={{ flexDirection: 'row', gap: 12, alignItems: 'flex-start' }}>
           <View style={[s.pastille, !c.conventionne && { backgroundColor: C.fond }]}>
             <Ionicons name={c.conventionne ? 'business' : 'time'} size={22} color={c.conventionne ? C.bleu : C.gris} />

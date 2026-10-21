@@ -9,7 +9,7 @@ export const RECEPISSE = {
   date: '25 juillet 2005',
 };
 
-export const OBJECTIF_ADHERENTS = { min: 5000, max: 10000 };
+export { OBJECTIF_ADHERENTS } from '@shared/regles';
 
 export const CONTACTS = {
   email: 'mutuelledesantepamezi@gmail.com',
@@ -65,58 +65,8 @@ export const LOCALITES = [
   'Autre village du Noun',
 ] as const;
 
-export type FormuleId = 'essentiel' | 'famille' | 'serenite';
-
-export type Formule = {
-  id: FormuleId;
-  nom: string;
-  cotisation: number; // FCFA / mois
-  personnes: string;
-  taux: number; // % pris en charge
-  plafond: number; // FCFA / an
-  garanties: string[];
-};
-
-// Barème indicatif : les montants définitifs sont fixés par l'assemblée générale.
-export const FORMULES: Formule[] = [
-  {
-    id: 'essentiel',
-    nom: 'Essentiel',
-    cotisation: 1000,
-    personnes: 'Le membre seul',
-    taux: 70,
-    plafond: 150000,
-    garanties: ['Consultations', 'Médicaments essentiels', 'Analyses de base'],
-  },
-  {
-    id: 'famille',
-    nom: 'Famille',
-    cotisation: 2500,
-    personnes: 'Membre + 5 ayants droit',
-    taux: 75,
-    plafond: 400000,
-    garanties: ['Tout Essentiel', 'Soins des enfants', 'Vaccinations', 'Suivi de grossesse'],
-  },
-  {
-    id: 'serenite',
-    nom: 'Sérénité',
-    cotisation: 5000,
-    personnes: 'Membre + 7 ayants droit',
-    taux: 80,
-    plafond: 800000,
-    garanties: ['Tout Famille', 'Hospitalisation', 'Accouchement', 'Imagerie (scanner, radio)'],
-  },
-];
-
-export const MODES_PAIEMENT = ['MTN Mobile Money', 'Orange Money', 'Espèces (bureau Pamezi)'] as const;
-export type ModePaiement = (typeof MODES_PAIEMENT)[number];
-
-export const CENTRES = [
-  { nom: 'Hôpital Nah Pôn', statut: 'Convention de soins signée', services: ['Consultations', 'Scanner', 'Radiologie'], conventionne: true },
-  { nom: 'Autres centres et cliniques de la ville', statut: 'En cours d’approche', services: [], conventionne: false },
-];
-
-export const MOTIFS = ['Consultation', 'Médicaments', 'Analyses', 'Imagerie', 'Hospitalisation', 'Accouchement', 'Autre'];
+// Les formules, les centres, les moyens de paiement et les motifs viennent de l'API
+// (voir shared/regles.ts pour les valeurs de départ).
 
 export function nombre(n: number) {
   // Espaces insécables : un montant ne se coupe jamais en fin de ligne.

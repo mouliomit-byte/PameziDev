@@ -1,5 +1,5 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { ReactNode } from 'react';
+import { ReactNode, useId } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, TextInput, TextInputProps, View, ViewStyle } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -28,11 +28,20 @@ export const DEGRADE = [C.bleuVif, C.bleu, C.bleuNuit] as const;
 
 export type IconName = keyof typeof Ionicons.glyphMap;
 
-export function Ecran({ children, bords = ['top'] }: { children: ReactNode; bords?: ('top' | 'bottom')[] }) {
+export function Ecran({
+  children,
+  bords = ['top'],
+  large,
+}: {
+  children: ReactNode;
+  bords?: ('top' | 'bottom')[];
+  /** Colonne plus large (back office sur ordinateur). */
+  large?: boolean;
+}) {
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: C.fond }} edges={bords}>
       <ScrollView contentContainerStyle={s.ecran} keyboardShouldPersistTaps="handled">
-        <View style={s.colonne}>{children}</View>
+        <View style={[s.colonne, large && { maxWidth: 1120 }]}>{children}</View>
       </ScrollView>
     </SafeAreaView>
   );
@@ -47,16 +56,18 @@ export const TRACE_M = 'M30 68 V32 H40 L50 48 L60 32 H70 V68 H61 V47 L50 63 L39 
  */
 export function Logo({ taille = 48, inverse }: { taille?: number; inverse?: boolean }) {
   const encre = inverse ? C.bleu : C.blanc;
+  // Identifiant unique : sur le Web, un dégradé défini dans un écran masqué ne s'affiche pas ailleurs.
+  const idDegrade = `pmz${useId().replace(/[^a-zA-Z0-9]/g, '')}`;
   return (
     <Svg width={taille} height={taille} viewBox="0 0 100 100" accessibilityLabel="Logo Pamezi">
       <Defs>
-        <SvgGradient id="pmz" x1="0" y1="0" x2="1" y2="1">
+        <SvgGradient id={idDegrade} x1="0" y1="0" x2="1" y2="1">
           <Stop offset="0" stopColor={C.bleuVif} />
           <Stop offset="0.55" stopColor={C.bleu} />
           <Stop offset="1" stopColor={C.bleuNuit} />
         </SvgGradient>
       </Defs>
-      <Circle cx="50" cy="50" r="50" fill={inverse ? C.blanc : 'url(#pmz)'} />
+      <Circle cx="50" cy="50" r="50" fill={inverse ? C.blanc : `url(#${idDegrade})`} />
       <Circle cx="50" cy="50" r="39" fill="none" stroke={encre} strokeWidth="5" />
       <Path d={TRACE_M} fill={encre} />
     </Svg>
@@ -149,7 +160,12 @@ export function Champ({ label, aide, ...props }: TextInputProps & { label: strin
   return (
     <View style={{ marginBottom: 16 }}>
       <Text style={s.label}>{label}</Text>
-      <TextInput placeholderTextColor="#98A6B8" style={s.input} {...props} />
+      <TextInput
+        placeholderTextColor="#98A6B8"
+        style={[s.input, props.multiline && { minHeight: 96, textAlignVertical: 'top' }]}
+        accessibilityLabel={label || undefined}
+        {...props}
+      />
       {aide ? <Text style={[s.petit, { marginTop: 4 }]}>{aide}</Text> : null}
     </View>
   );
@@ -289,3 +305,114 @@ export const s = StyleSheet.create({
   numero: { backgroundColor: C.bleu, width: 30, height: 30, borderRadius: 15, alignItems: 'center', justifyContent: 'center' },
   pastille: { backgroundColor: C.bleuClair, width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center' },
 });
+
+/** Message d'erreur ou d'information affiché dans la page (les boîtes de dialogue ne marchent pas partout). */
+export function Alerte({ texte, type = 'erreur' }: { texte: string | null; type?: 'erreur' | 'info' | 'succes' }) {
+  if (!texte) return null;
+  const couleur = type === 'erreur' ? C.rouge : type === 'succes' ? C.vert : C.bleu;
+  const icone: IconName = type === 'erreur' ? 'alert-circle' : type === 'succes' ? 'checkmark-circle' : 'information-circle';
+  return (
+    <View
+      accessibilityRole="alert"
+      style={{ flexDirection: 'row', gap: 10, alignItems: 'flex-start', backgroundColor: couleur + '14', borderRadius: 12, padding: 12, marginVertical: 8 }}>
+      <Ionicons name={icone} size={20} color={couleur} />
+      <Text style={[s.texte, { flex: 1, color: type === 'erreur' ? C.rouge : C.texte }]}>{texte}</Text>
+    </View>
+  );
+}
+
+/** Chiffre clé du tableau de bord. */
+export function Kpi({
+  icone,
+  valeur,
+  unite,
+  libelle,
+  detail,
+  couleur = C.bleu,
+}: {
+  icone: IconName;
+  valeur: string;
+  unite?: string;
+  libelle: string;
+  detail?: string;
+  couleur?: string;
+}) {
+  return (
+    <View style={[s.carte, { flexGrow: 1, flexBasis: 160, marginBottom: 0, gap: 6 }]}>
+      <View style={[s.pastille, { width: 36, height: 36, borderRadius: 18, backgroundColor: couleur + '1A' }]}>
+        <Ionicons name={icone} size={18} color={couleur} />
+      </View>
+      <Text style={{ fontSize: 22, fontWeight: '900', color: C.texte, fontVariant: ['tabular-nums'] }}>
+        {valeur}
+        {unite ? <Text style={{ fontSize: 13, fontWeight: '700', color: C.gris }}>{` ${unite}`}</Text> : null}
+      </Text>
+      <Text style={[s.petit, { color: C.texte, fontWeight: '600' }]}>{libelle}</Text>
+      {detail ? <Text style={s.petit}>{detail}</Text> : null}
+    </View>
+  );
+}
+
+/** Barres horizontales simples (répartition, montants par mois). */
+export function Barres({ lignes, format = (n: number) => String(n) }: { lignes: { libelle: string; valeur: number }[]; format?: (n: number) => string }) {
+  const max = Math.max(1, ...lignes.map((l) => l.valeur));
+  if (!lignes.length) return <Text style={s.petit}>Aucune donnée pour le moment.</Text>;
+  return (
+    <View style={{ gap: 10 }}>
+      {lignes.map((l) => (
+        <View key={l.libelle} style={{ gap: 4 }}>
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', gap: 8 }}>
+            <Text style={[s.petit, { color: C.texte, flexShrink: 1 }]}>{l.libelle}</Text>
+            <Text style={[s.petit, { color: C.texte, fontWeight: '700', fontVariant: ['tabular-nums'] }]}>{format(l.valeur)}</Text>
+          </View>
+          <View style={{ height: 8, borderRadius: 4, backgroundColor: C.bleuClair, overflow: 'hidden' }}>
+            <View style={{ width: `${(l.valeur / max) * 100}%`, height: '100%', borderRadius: 4, backgroundColor: C.bleu }} />
+          </View>
+        </View>
+      ))}
+    </View>
+  );
+}
+
+/** Onglets de filtre (« En attente », « Confirmées »…). */
+export function Onglets<T extends string>({ options, valeur, onChange }: { options: { valeur: T; libelle: string }[]; valeur: T; onChange: (v: T) => void }) {
+  return (
+    <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8, paddingBottom: 12 }}>
+      {options.map((o) => {
+        const actif = o.valeur === valeur;
+        return (
+          <Pressable
+            key={o.valeur}
+            accessibilityRole="tab"
+            accessibilityState={{ selected: actif }}
+            onPress={() => onChange(o.valeur)}
+            style={[s.puce, actif && { backgroundColor: C.bleuFonce, borderColor: C.bleuFonce }]}>
+            <Text style={[s.puceTexte, actif && { color: C.blanc }]}>{o.libelle}</Text>
+          </Pressable>
+        );
+      })}
+    </ScrollView>
+  );
+}
+
+/** Petit bouton d'action dans une ligne de liste. */
+export function Action({ titre, onPress, couleur = C.bleu, plein, desactive }: { titre: string; onPress: () => void; couleur?: string; plein?: boolean; desactive?: boolean }) {
+  return (
+    <Pressable
+      accessibilityRole="button"
+      onPress={onPress}
+      disabled={desactive}
+      style={({ pressed }) => ({
+        borderWidth: 1.5,
+        borderColor: couleur,
+        backgroundColor: plein ? couleur : 'transparent',
+        borderRadius: 10,
+        paddingVertical: 8,
+        paddingHorizontal: 12,
+        minHeight: 40,
+        justifyContent: 'center',
+        opacity: desactive ? 0.4 : pressed ? 0.75 : 1,
+      })}>
+      <Text style={{ color: plein ? C.blanc : couleur, fontWeight: '800', fontSize: 14 }}>{titre}</Text>
+    </Pressable>
+  );
+}
