@@ -28,7 +28,7 @@ Objectif : **5 000 à 10 000 adhérents**. Convention de soins avec l'**Hôpital
 
 ## Identité visuelle
 
-Bleu Pamezi `#0070C6` (dégradé `#1580DB` → `#084A88`), titres `#0B59A3`, logo « M » cerclé, filet vert `#007A5E`, rouge `#D91613`, jaune `#FCD116` aux couleurs du Cameroun
+Bleu Pamezi `#0070C6` (dégradé `#1580DB` → `#084A88`), titres `#0B59A3`, logo « P » dont le creux forme une croix médicale, filet vert `#007A5E`, rouge `#D91613`, jaune `#FCD116` aux couleurs du Cameroun
 (repris de l'affiche officielle). Couleurs dans `src/components/ui.tsx`, icônes dans `assets/`.
 
 ## Contacts

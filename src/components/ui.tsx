@@ -3,6 +3,7 @@ import { ReactNode } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, TextInput, TextInputProps, View, ViewStyle } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import Svg, { Defs, LinearGradient as SvgGradient, Path, Rect, Stop } from 'react-native-svg';
 
 // Couleurs relevées sur l'affiche officielle de la Mutuelle de Santé Pamezi.
 export const C = {
@@ -37,33 +38,24 @@ export function Ecran({ children, bords = ['top'] }: { children: ReactNode; bord
   );
 }
 
-/** Logo Pamezi : « M » blanc dans un cercle bleu cerclé de blanc. */
+/** Tracé du logo Pamezi : un P dont le creux forme une croix médicale (viewBox 100×100). */
+export const TRACE_P =
+  'M30 18 H56 A22 22 0 0 1 56 62 H46 V82 H30 Z M55 31 H61 V37 H67 V43 H61 V49 H55 V43 H49 V37 H55 Z';
+
+/** Logo Pamezi. Par défaut : P blanc sur carré bleu dégradé ; `inverse` : P bleu sur carré blanc. */
 export function Logo({ taille = 48, inverse }: { taille?: number; inverse?: boolean }) {
-  const fond = inverse ? C.blanc : C.bleu;
-  const encre = inverse ? C.bleu : C.blanc;
   return (
-    <View
-      style={{
-        width: taille,
-        height: taille,
-        borderRadius: taille / 2,
-        backgroundColor: fond,
-        alignItems: 'center',
-        justifyContent: 'center',
-      }}>
-      <View
-        style={{
-          width: taille * 0.8,
-          height: taille * 0.8,
-          borderRadius: taille * 0.4,
-          borderWidth: Math.max(1.5, taille * 0.05),
-          borderColor: encre,
-          alignItems: 'center',
-          justifyContent: 'center',
-        }}>
-        <Text style={{ color: encre, fontSize: taille * 0.44, fontWeight: '900', marginTop: -taille * 0.02 }}>M</Text>
-      </View>
-    </View>
+    <Svg width={taille} height={taille} viewBox="0 0 100 100" accessibilityLabel="Logo Pamezi">
+      <Defs>
+        <SvgGradient id="pmz" x1="0" y1="0" x2="1" y2="1">
+          <Stop offset="0" stopColor={C.bleuVif} />
+          <Stop offset="0.55" stopColor={C.bleu} />
+          <Stop offset="1" stopColor={C.bleuNuit} />
+        </SvgGradient>
+      </Defs>
+      <Rect width="100" height="100" rx="24" fill={inverse ? C.blanc : 'url(#pmz)'} />
+      <Path d={TRACE_P} fill={inverse ? C.bleu : C.blanc} fillRule="evenodd" />
+    </Svg>
   );
 }
 
