@@ -18,6 +18,9 @@ const FILTRES: { valeur: StatutMembre | ''; libelle: string }[] = [
   { valeur: 'demission', libelle: 'Démissions' },
 ];
 
+// Une page intégrée dans une autre (aperçu, artefact) ne peut pas télécharger de fichier.
+const exportPossible = Platform.OS !== 'web' || (typeof window !== 'undefined' && window.self === window.top);
+
 export default function Membres() {
   const { avecJeton } = useAdmin();
   const [q, setQ] = useState('');
@@ -57,9 +60,11 @@ export default function Membres() {
             accessibilityLabel="Rechercher un membre"
           />
         </View>
-        <View style={{ minWidth: 180 }}>
-          <Bouton titre="Exporter (Excel)" icone="download" variante="contour" onPress={exporter} />
-        </View>
+        {exportPossible ? (
+          <View style={{ minWidth: 180 }}>
+            <Bouton titre="Exporter (Excel)" icone="download" variante="contour" onPress={exporter} />
+          </View>
+        ) : null}
       </View>
       <Onglets options={FILTRES} valeur={statut} onChange={setStatut} />
       {message ? <Alerte texte={message.texte} type={message.type} /> : null}
