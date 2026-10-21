@@ -43,7 +43,7 @@ export default function Tontine() {
         <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
           <Text style={{ color: C.bleuPale, fontSize: 14, fontWeight: '600' }}>Ma participation</Text>
           <View style={{ backgroundColor: sit.aJour ? C.jaune : '#FFD7D2', borderRadius: 8, paddingHorizontal: 9, paddingVertical: 4 }}>
-            <Text style={{ fontSize: 11, fontWeight: '900', color: sit.aJour ? C.bleuNuit : C.rouge }}>
+            <Text style={{ fontSize: 11, fontWeight: '900', color: sit.aJour ? '#084A88' : '#B3120F' }}>
               {sit.aJour ? 'À JOUR' : `${sit.moisDus - sit.moisPayes} MOIS EN RETARD`}
             </Text>
           </View>
@@ -58,7 +58,7 @@ export default function Tontine() {
       <Carte>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
           <View style={s.pastille}>
-            <Ionicons name="megaphone" size={22} color={C.bleu} />
+            <Ionicons name="megaphone" size={22} color={C.accent} />
           </View>
           <View style={{ flex: 1 }}>
             <Text style={[s.h2, { marginBottom: 0 }]}>
@@ -101,7 +101,7 @@ export default function Tontine() {
                 <Text style={[s.texte, { fontWeight: '800' }]}>{fcfa(c.montant)}</Text>
                 <Badge
                   texte={LIBELLE_STATUT_COTISATION[c.statut]}
-                  couleur={c.statut === 'confirmee' ? C.vert : c.statut === 'rejetee' ? C.rouge : '#B7791F'}
+                  couleur={c.statut === 'confirmee' ? C.vert : c.statut === 'rejetee' ? C.rouge : C.orange}
                 />
               </View>
             </View>

@@ -2,13 +2,16 @@ import { Stack } from 'expo-router';
 
 import { C } from '@/components/ui';
 import { AdminProvider } from '@/lib/admin';
+import { RedessinerAuTheme, useAffichage } from '@/lib/theme';
 
 export default function AdminLayout() {
+  useAffichage(); // redessine les en-têtes au changement d'affichage
   return (
     <AdminProvider>
       <Stack
+        screenLayout={({ children }) => <RedessinerAuTheme>{children}</RedessinerAuTheme>}
         screenOptions={{
-          headerTintColor: C.bleu,
+          headerTintColor: C.accent,
           headerShadowVisible: false,
           headerStyle: { backgroundColor: C.fond },
           headerTitleStyle: { fontWeight: '800', color: C.bleuFonce },

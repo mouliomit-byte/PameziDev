@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { Text, View } from 'react-native';
 
 import { Bouton, C, Carte, Degrade, Ecran, Ligne, Logo, s, Section, Titre, Tricolore, Vide } from '@/components/ui';
+import { ChoixAffichage } from '@/components/affichage';
 import { CONTACTS, dateFr, SLOGAN } from '@/lib/data';
 import { useActualiserAuFocus, usePamezi } from '@/lib/store';
 import { formaterTelephone, LIBELLE_STATUT_MEMBRE, nomComplet } from '@shared/regles';
@@ -20,6 +21,10 @@ export default function Profil() {
           <Bouton titre="Adhérer" icone="person-add" onPress={() => router.push('/adhesion')} />
           <Bouton titre="Déjà membre ? Se connecter" icone="log-in" variante="contour" onPress={() => router.push('/connexion')} />
         </Vide>
+        <Section icone="contrast">Affichage</Section>
+        <Carte>
+          <ChoixAffichage />
+        </Carte>
       </Ecran>
     );
   }
@@ -75,7 +80,7 @@ export default function Profil() {
       <Carte>
         <Text style={s.texte}>
           Pour toute question, une modification de vos ayants droit ou une démission, écrivez-nous à{' '}
-          <Text style={{ fontWeight: '800', color: C.bleu }}>{CONTACTS.email}</Text>.
+          <Text style={{ fontWeight: '800', color: C.accent }}>{CONTACTS.email}</Text>.
         </Text>
       </Carte>
 
@@ -88,6 +93,11 @@ export default function Profil() {
       ) : (
         <Bouton titre="Se déconnecter de cet appareil" icone="log-out" variante="contour" onPress={() => setConfirmer(true)} />
       )}
+
+      <Section icone="contrast">Affichage</Section>
+      <Carte>
+        <ChoixAffichage />
+      </Carte>
     </Ecran>
   );
 }

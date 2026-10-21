@@ -6,25 +6,59 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import Svg, { Circle, Defs, LinearGradient as SvgGradient, Path, Stop } from 'react-native-svg';
 
 // Couleurs relevées sur l'affiche officielle de la Mutuelle de Santé Pamezi.
-export const C = {
-  bleu: '#0070C6', // bandeaux et cercles d'icônes
+const CLAIR = {
+  bleu: '#0070C6', // bandeaux, boutons et cercles d'icônes
+  accent: '#0070C6', // textes et icônes bleus
   bleuVif: '#1580DB', // pastilles de titres, haut des dégradés
   bleuFonce: '#0B59A3', // titres (« MUTUELLE DE SANTÉ PAMEZI »)
   bleuNuit: '#084A88', // bas des dégradés
   bleuClair: '#E6F3FC', // fonds de pastilles
   bleuPale: '#C6E6F9', // vagues bleu ciel, textes sur bleu
   vert: '#007A5E', // drapeau du Cameroun
+  vertClair: '#E3F4EA',
   rouge: '#D91613',
   jaune: '#FCD116',
+  orange: '#B7791F', // « en attente », « en retard »
   texte: '#123A61', // texte bleu profond, comme sur l'affiche
   gris: '#56708C',
+  indice: '#98A6B8', // texte d'exemple des champs
   bord: '#D6E6F4',
   fond: '#F5FAFE',
-  blanc: '#FFFFFF',
+  surface: '#FFFFFF', // cartes, champs
+  blanc: '#FFFFFF', // texte sur fond bleu
+  degrade: ['#1580DB', '#0070C6', '#084A88'] as [string, string, string],
 };
 
-/** Dégradé bleu des bandeaux de l'affiche. */
-export const DEGRADE = [C.bleuVif, C.bleu, C.bleuNuit] as const;
+/** Affichage sombre : bleu nuit profond, mêmes repères que l'affiche, contrastes relevés. */
+const SOMBRE: typeof CLAIR = {
+  bleu: '#1A7ACB',
+  accent: '#62B2F0',
+  bleuVif: '#2A8FE0',
+  bleuFonce: '#93CBF6',
+  bleuNuit: '#0A3D70',
+  bleuClair: '#17324D',
+  bleuPale: '#C6E6F9',
+  vert: '#2DB389',
+  vertClair: '#123A30',
+  rouge: '#F2584C',
+  jaune: '#FCD116',
+  orange: '#E3A440',
+  texte: '#E3EEF9',
+  gris: '#96ABC2',
+  indice: '#6A819B',
+  bord: '#243B53',
+  fond: '#0A1520',
+  surface: '#122334',
+  blanc: '#FFFFFF',
+  degrade: ['#1668B5', '#0E5698', '#07335F'],
+};
+
+export type Theme = 'clair' | 'sombre';
+
+/** Palette courante (modifiée sur place quand on change d'affichage). */
+export const C = { ...CLAIR };
+let themeActif: Theme = 'clair';
+export const themeCourant = () => themeActif;
 
 export type IconName = keyof typeof Ionicons.glyphMap;
 
@@ -111,7 +145,7 @@ export function Section({ icone, children }: { icone: IconName; children: ReactN
 
 export function Degrade({ children, style }: { children?: ReactNode; style?: ViewStyle }) {
   return (
-    <LinearGradient colors={DEGRADE} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={[{ overflow: 'hidden' }, style]}>
+    <LinearGradient colors={C.degrade} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={[{ overflow: 'hidden' }, style]}>
       {children}
     </LinearGradient>
   );
@@ -136,8 +170,8 @@ export function Bouton({
 }) {
   const styles = {
     plein: { fond: C.bleu, bord: C.bleu, encre: C.blanc },
-    contour: { fond: 'transparent', bord: C.bleu, encre: C.bleu },
-    blanc: { fond: C.blanc, bord: C.blanc, encre: C.bleuFonce },
+    contour: { fond: 'transparent', bord: C.accent, encre: C.accent },
+    blanc: { fond: '#FFFFFF', bord: '#FFFFFF', encre: '#0B59A3' }, // sur les bandeaux bleus
     danger: { fond: C.rouge, bord: C.rouge, encre: C.blanc },
   }[variante];
   return (
@@ -161,7 +195,7 @@ export function Champ({ label, aide, ...props }: TextInputProps & { label: strin
     <View style={{ marginBottom: 16 }}>
       <Text style={s.label}>{label}</Text>
       <TextInput
-        placeholderTextColor="#98A6B8"
+        placeholderTextColor={C.indice}
         style={[s.input, props.multiline && { minHeight: 96, textAlignVertical: 'top' }]}
         accessibilityLabel={label || undefined}
         {...props}
@@ -208,14 +242,14 @@ export function Choix<T extends string>({
 export function Ligne({ gauche, droite, icone }: { gauche: string; droite: string; icone?: IconName }) {
   return (
     <View style={s.ligne}>
-      {icone ? <Ionicons name={icone} size={18} color={C.bleu} style={{ marginRight: 10 }} /> : null}
+      {icone ? <Ionicons name={icone} size={18} color={C.accent} style={{ marginRight: 10 }} /> : null}
       <Text style={[s.texte, { flex: 1, color: C.gris }]}>{gauche}</Text>
       <Text style={[s.texte, { fontWeight: '700', flexShrink: 1, textAlign: 'right' }]}>{droite}</Text>
     </View>
   );
 }
 
-export function Badge({ texte, couleur = C.bleu }: { texte: string; couleur?: string }) {
+export function Badge({ texte, couleur = C.accent }: { texte: string; couleur?: string }) {
   return (
     <View style={[s.badge, { backgroundColor: couleur + '1F' }]}>
       <Text style={[s.badgeTexte, { color: couleur }]}>{texte}</Text>
@@ -235,7 +269,7 @@ export function Vide({ icone, texte, children }: { icone: IconName; texte: strin
   return (
     <Carte style={{ alignItems: 'center', paddingVertical: 28 }}>
       <View style={[s.pastille, { width: 64, height: 64, borderRadius: 32 }]}>
-        <Ionicons name={icone} size={30} color={C.bleu} />
+        <Ionicons name={icone} size={30} color={C.accent} />
       </View>
       <Text style={[s.texte, { textAlign: 'center', marginVertical: 14, color: C.gris }]}>{texte}</Text>
       {children ? <View style={{ alignSelf: 'stretch' }}>{children}</View> : null}
@@ -243,15 +277,7 @@ export function Vide({ icone, texte, children }: { icone: IconName; texte: strin
   );
 }
 
-const ombre = {
-  shadowColor: '#0B59A3',
-  shadowOpacity: 0.08,
-  shadowRadius: 12,
-  shadowOffset: { width: 0, height: 4 },
-  elevation: 2,
-};
-
-export const s = StyleSheet.create({
+const creerStyles = () => StyleSheet.create({
   ecran: { padding: 16, paddingBottom: 48, alignItems: 'center' },
   colonne: { width: '100%', maxWidth: 680 },
   titre: { fontSize: 28, fontWeight: '900', color: C.bleuFonce, letterSpacing: -0.3 },
@@ -259,7 +285,20 @@ export const s = StyleSheet.create({
   h2: { fontSize: 18, fontWeight: '800', color: C.texte, marginBottom: 10 },
   texte: { fontSize: 15, color: C.texte, lineHeight: 22 },
   petit: { fontSize: 13, color: C.gris, lineHeight: 19 },
-  carte: { backgroundColor: C.blanc, borderRadius: 18, padding: 18, marginBottom: 14, ...ombre },
+  carte: {
+    backgroundColor: C.surface,
+    borderRadius: 18,
+    padding: 18,
+    marginBottom: 14,
+    shadowColor: themeActif === 'sombre' ? '#000000' : '#0B59A3',
+    shadowOpacity: themeActif === 'sombre' ? 0.3 : 0.08,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 2,
+    // En sombre, l'ombre se voit peu : un filet délimite les cartes.
+    borderWidth: themeActif === 'sombre' ? 1 : 0,
+    borderColor: C.bord,
+  },
   section: { flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: 10, marginBottom: 12 },
   sectionIcone: { backgroundColor: C.bleuVif, width: 32, height: 32, borderRadius: 16, alignItems: 'center', justifyContent: 'center' },
   sectionTexte: { fontSize: 15, fontWeight: '900', color: C.bleuFonce, textTransform: 'uppercase', letterSpacing: 0.6, flex: 1 },
@@ -277,7 +316,7 @@ export const s = StyleSheet.create({
   boutonTexte: { fontSize: 16, fontWeight: '800' },
   label: { fontSize: 14, fontWeight: '700', color: C.texte, marginBottom: 8 },
   input: {
-    backgroundColor: C.blanc,
+    backgroundColor: C.surface,
     borderWidth: 1,
     borderColor: C.bord,
     borderRadius: 12,
@@ -293,7 +332,7 @@ export const s = StyleSheet.create({
     gap: 4,
     borderWidth: 1,
     borderColor: C.bord,
-    backgroundColor: C.blanc,
+    backgroundColor: C.surface,
     borderRadius: 22,
     paddingVertical: 9,
     paddingHorizontal: 14,
@@ -306,10 +345,21 @@ export const s = StyleSheet.create({
   pastille: { backgroundColor: C.bleuClair, width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center' },
 });
 
+/** Styles partagés (recalculés sur place quand on change d'affichage). */
+export const s = creerStyles();
+
+/** Passe toute l'interface en clair ou en sombre ; les écrans sont ensuite redessinés (voir lib/theme). */
+export function appliquerTheme(theme: Theme) {
+  if (theme === themeActif) return;
+  themeActif = theme;
+  Object.assign(C, theme === 'sombre' ? SOMBRE : CLAIR);
+  Object.assign(s, creerStyles());
+}
+
 /** Message d'erreur ou d'information affiché dans la page (les boîtes de dialogue ne marchent pas partout). */
 export function Alerte({ texte, type = 'erreur' }: { texte: string | null; type?: 'erreur' | 'info' | 'succes' }) {
   if (!texte) return null;
-  const couleur = type === 'erreur' ? C.rouge : type === 'succes' ? C.vert : C.bleu;
+  const couleur = type === 'erreur' ? C.rouge : type === 'succes' ? C.vert : C.accent;
   const icone: IconName = type === 'erreur' ? 'alert-circle' : type === 'succes' ? 'checkmark-circle' : 'information-circle';
   return (
     <View
@@ -328,7 +378,7 @@ export function Kpi({
   unite,
   libelle,
   detail,
-  couleur = C.bleu,
+  couleur = C.accent,
 }: {
   icone: IconName;
   valeur: string;
@@ -385,7 +435,7 @@ export function Onglets<T extends string>({ options, valeur, onChange }: { optio
             accessibilityRole="tab"
             accessibilityState={{ selected: actif }}
             onPress={() => onChange(o.valeur)}
-            style={[s.puce, actif && { backgroundColor: C.bleuFonce, borderColor: C.bleuFonce }]}>
+            style={[s.puce, actif && { backgroundColor: C.bleu, borderColor: C.bleu }]}>
             <Text style={[s.puceTexte, actif && { color: C.blanc }]}>{o.libelle}</Text>
           </Pressable>
         );
@@ -395,7 +445,7 @@ export function Onglets<T extends string>({ options, valeur, onChange }: { optio
 }
 
 /** Petit bouton d'action dans une ligne de liste. */
-export function Action({ titre, onPress, couleur = C.bleu, plein, desactive }: { titre: string; onPress: () => void; couleur?: string; plein?: boolean; desactive?: boolean }) {
+export function Action({ titre, onPress, couleur = C.accent, plein, desactive }: { titre: string; onPress: () => void; couleur?: string; plein?: boolean; desactive?: boolean }) {
   return (
     <Pressable
       accessibilityRole="button"
@@ -412,7 +462,7 @@ export function Action({ titre, onPress, couleur = C.bleu, plein, desactive }: {
         justifyContent: 'center',
         opacity: desactive ? 0.4 : pressed ? 0.75 : 1,
       })}>
-      <Text style={{ color: plein ? C.blanc : couleur, fontWeight: '800', fontSize: 14 }}>{titre}</Text>
+      <Text style={{ color: plein ? (themeActif === 'sombre' ? C.fond : C.blanc) : couleur, fontWeight: '800', fontSize: 14 }}>{titre}</Text>
     </Pressable>
   );
 }

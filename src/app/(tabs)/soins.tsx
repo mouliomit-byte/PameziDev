@@ -32,7 +32,7 @@ export default function Soins() {
             </Carte>
             <Carte style={{ flex: 1 }}>
               <Text style={s.petit}>Plafond restant</Text>
-              <Text style={{ fontSize: 19, fontWeight: '900', color: C.bleu, marginTop: 4 }}>{fcfa(plafondRestant)}</Text>
+              <Text style={{ fontSize: 19, fontWeight: '900', color: C.accent, marginTop: 4 }}>{fcfa(plafondRestant)}</Text>
             </Carte>
           </View>
           <Bouton titre="Nouvelle demande de prise en charge" icone="add-circle" onPress={() => router.push('/demande')} />
@@ -47,7 +47,7 @@ export default function Soins() {
                   <Text style={[s.texte, { fontWeight: '800' }]}>{d.motif}</Text>
                   <Badge
                     texte={LIBELLE_STATUT_DEMANDE[d.statut]}
-                    couleur={d.statut === 'en_cours' ? '#B7791F' : d.statut === 'rejetee' ? C.rouge : C.vert}
+                    couleur={d.statut === 'en_cours' ? C.orange : d.statut === 'rejetee' ? C.rouge : C.vert}
                   />
                 </View>
                 <Text style={s.petit}>
@@ -72,7 +72,7 @@ export default function Soins() {
       {centres.map((c) => (
         <Carte key={c.nom} style={{ flexDirection: 'row', gap: 12, alignItems: 'flex-start' }}>
           <View style={[s.pastille, !c.conventionne && { backgroundColor: C.fond }]}>
-            <Ionicons name={c.conventionne ? 'business' : 'time'} size={22} color={c.conventionne ? C.bleu : C.gris} />
+            <Ionicons name={c.conventionne ? 'business' : 'time'} size={22} color={c.conventionne ? C.accent : C.gris} />
           </View>
           <View style={{ flex: 1, gap: 4 }}>
             <Text style={[s.texte, { fontWeight: '800' }]}>{c.nom}</Text>
@@ -88,7 +88,7 @@ export default function Soins() {
           <View
             key={c.texte}
             style={[{ flexDirection: 'row', gap: 12, alignItems: 'center', paddingVertical: 11 }, i < PREVENTION.length - 1 && { borderBottomWidth: 1, borderBottomColor: C.bord }]}>
-            <Ionicons name={c.icone} size={20} color={C.bleu} />
+            <Ionicons name={c.icone} size={20} color={C.accent} />
             <Text style={[s.texte, { flex: 1 }]}>{c.texte}</Text>
           </View>
         ))}

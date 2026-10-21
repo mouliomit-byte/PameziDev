@@ -66,7 +66,7 @@ export default function Cotisations() {
             </View>
             <View style={{ alignItems: 'flex-end', gap: 4 }}>
               <Text style={[s.texte, { fontWeight: '900' }]}>{fcfa(c.montant)}</Text>
-              <Badge texte={LIBELLE_STATUT_COTISATION[c.statut]} couleur={c.statut === 'confirmee' ? C.vert : c.statut === 'rejetee' ? C.rouge : '#B7791F'} />
+              <Badge texte={LIBELLE_STATUT_COTISATION[c.statut]} couleur={c.statut === 'confirmee' ? C.vert : c.statut === 'rejetee' ? C.rouge : C.orange} />
             </View>
           </View>
           <Text style={[s.petit, { marginTop: 6 }]}>

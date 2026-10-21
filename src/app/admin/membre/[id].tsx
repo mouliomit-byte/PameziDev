@@ -65,11 +65,11 @@ export default function FicheMembre() {
         <View style={{ flexDirection: 'row', justifyContent: 'space-between', gap: 8, flexWrap: 'wrap' }}>
           <View style={{ flexShrink: 1 }}>
             <Text style={s.titre}>{nomComplet(m)}</Text>
-            <Text style={[s.texte, { color: C.bleu, fontWeight: '800', letterSpacing: 1 }]}>{m.numero}</Text>
+            <Text style={[s.texte, { color: C.accent, fontWeight: '800', letterSpacing: 1 }]}>{m.numero}</Text>
           </View>
           <View style={{ gap: 6, alignItems: 'flex-end' }}>
             <Badge texte={LIBELLE_STATUT_MEMBRE[m.statut]} couleur={m.statut === 'actif' ? C.vert : C.rouge} />
-            <Badge texte={p.situation.aJour ? 'À jour' : `${p.situation.moisDus - p.situation.moisPayes} mois de retard`} couleur={p.situation.aJour ? C.vert : '#B7791F'} />
+            <Badge texte={p.situation.aJour ? 'À jour' : `${p.situation.moisDus - p.situation.moisPayes} mois de retard`} couleur={p.situation.aJour ? C.vert : C.orange} />
           </View>
         </View>
         <Ligne
@@ -129,7 +129,7 @@ export default function FicheMembre() {
           <Text style={s.h2}>Adhésion</Text>
           <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 12 }}>
             {m.statut !== 'actif' ? <Action titre="Réactiver" couleur={C.vert} plein onPress={() => changerStatut('actif', 'Adhésion réactivée.')} desactive={occupe} /> : null}
-            {m.statut === 'actif' ? <Action titre="Suspendre" couleur="#B7791F" onPress={() => changerStatut('suspendu', 'Adhésion suspendue.')} desactive={occupe} /> : null}
+            {m.statut === 'actif' ? <Action titre="Suspendre" couleur={C.orange} onPress={() => changerStatut('suspendu', 'Adhésion suspendue.')} desactive={occupe} /> : null}
             {m.statut !== 'demission' ? <Action titre="Enregistrer la démission" couleur={C.rouge} onPress={() => changerStatut('demission', 'Démission enregistrée.')} desactive={occupe} /> : null}
           </View>
           {formules ? (
@@ -171,7 +171,7 @@ export default function FicheMembre() {
                 {dateFr(c.date)} · {c.mode} · réf. {c.reference}
               </Text>
             </View>
-            <Badge texte={LIBELLE_STATUT_COTISATION[c.statut]} couleur={c.statut === 'confirmee' ? C.vert : c.statut === 'rejetee' ? C.rouge : '#B7791F'} />
+            <Badge texte={LIBELLE_STATUT_COTISATION[c.statut]} couleur={c.statut === 'confirmee' ? C.vert : c.statut === 'rejetee' ? C.rouge : C.orange} />
           </View>
         ))}
       </Carte>
@@ -190,7 +190,7 @@ export default function FicheMembre() {
                 {d.commentaire ? ` · ${d.commentaire}` : ''}
               </Text>
             </View>
-            <Badge texte={LIBELLE_STATUT_DEMANDE[d.statut]} couleur={d.statut === 'en_cours' ? '#B7791F' : d.statut === 'rejetee' ? C.rouge : C.vert} />
+            <Badge texte={LIBELLE_STATUT_DEMANDE[d.statut]} couleur={d.statut === 'en_cours' ? C.orange : d.statut === 'rejetee' ? C.rouge : C.vert} />
           </View>
         ))}
       </Carte>

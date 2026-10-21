@@ -68,7 +68,7 @@ export default function Demandes() {
                 {d.membreNumero} · {dateFr(d.date)}
               </Text>
             </View>
-            <Badge texte={LIBELLE_STATUT_DEMANDE[d.statut]} couleur={d.statut === 'en_cours' ? '#B7791F' : d.statut === 'rejetee' ? C.rouge : C.vert} />
+            <Badge texte={LIBELLE_STATUT_DEMANDE[d.statut]} couleur={d.statut === 'en_cours' ? C.orange : d.statut === 'rejetee' ? C.rouge : C.vert} />
           </View>
           <Text style={[s.texte, { marginTop: 8 }]}>
             <Text style={{ fontWeight: '800' }}>{d.motif}</Text> · {d.centre}
@@ -90,7 +90,7 @@ export default function Demandes() {
                 value={notes[d.id] ?? ''}
                 onChangeText={(v) => setNotes((n) => ({ ...n, [d.id]: v }))}
                 placeholder="Commentaire (facultatif, visible dans le journal)"
-                placeholderTextColor="#98A6B8"
+                placeholderTextColor={C.indice}
                 style={[s.input, { marginTop: 10, fontSize: 14, paddingVertical: 10 }]}
                 accessibilityLabel="Commentaire"
               />

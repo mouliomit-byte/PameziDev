@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Text, View } from 'react-native';
 
 import { EcranAdmin } from '@/components/admin';
+import { ChoixAffichage } from '@/components/affichage';
 import { Action, Alerte, Badge, Bouton, C, Carte, Champ, Choix, s, Section } from '@/components/ui';
 import { useAdmin, useDonnees } from '@/lib/admin';
 import { api } from '@/lib/api';
@@ -37,6 +38,11 @@ export default function Parametres() {
     <EcranAdmin erreur={formules.erreur ?? centres.erreur ?? gestionnaires.erreur}>
       {message ? <Alerte texte={message.texte} type={message.type} /> : null}
 
+      <Section icone="contrast">Affichage</Section>
+      <Carte>
+        <ChoixAffichage />
+      </Carte>
+
       <Section icone="pricetags">Formules et cotisations</Section>
       {!proprio ? <Alerte type="info" texte="Seul le propriétaire peut modifier les formules." /> : null}
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 12 }}>
@@ -67,7 +73,7 @@ export default function Parametres() {
             <Badge texte={c.statut} couleur={c.conventionne ? C.vert : C.gris} />
             <Action
               titre={c.conventionne ? 'Retirer la convention' : 'Convention signée'}
-              couleur={c.conventionne ? '#B7791F' : C.vert}
+              couleur={c.conventionne ? C.orange : C.vert}
               onPress={() =>
                 agir((j) => api.admin.enregistrerCentre(j, { id: c.id, conventionne: !c.conventionne }), `${c.nom} mis à jour.`, centres.recharger)
               }
@@ -88,7 +94,7 @@ export default function Parametres() {
                 {g.email} · créé le {dateFr(g.creeLe)}
               </Text>
             </View>
-            <Badge texte={g.role === 'proprietaire' ? 'Propriétaire' : 'Gestionnaire'} couleur={g.role === 'proprietaire' ? C.bleu : C.gris} />
+            <Badge texte={g.role === 'proprietaire' ? 'Propriétaire' : 'Gestionnaire'} couleur={g.role === 'proprietaire' ? C.accent : C.gris} />
             {!g.actif ? <Badge texte="Désactivé" couleur={C.rouge} /> : null}
             {proprio && g.id !== admin?.id ? (
               <Action

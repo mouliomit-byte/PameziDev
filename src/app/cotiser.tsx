@@ -32,11 +32,11 @@ export default function Cotiser() {
     return (
       <Ecran bords={['bottom']}>
         <Carte style={{ alignItems: 'center', paddingVertical: 26 }}>
-          <View style={{ backgroundColor: '#E3F4EA', width: 76, height: 76, borderRadius: 38, alignItems: 'center', justifyContent: 'center' }}>
+          <View style={{ backgroundColor: C.vertClair, width: 76, height: 76, borderRadius: 38, alignItems: 'center', justifyContent: 'center' }}>
             <Ionicons name="checkmark" size={44} color={C.vert} />
           </View>
           <Text style={[s.h2, { marginTop: 12, marginBottom: 4 }]}>{recu.statut === 'confirmee' ? 'Cotisation enregistrée' : 'Cotisation à régler au bureau'}</Text>
-          <Text style={{ fontSize: 28, fontWeight: '900', color: C.bleu }}>{fcfa(recu.montant)}</Text>
+          <Text style={{ fontSize: 28, fontWeight: '900', color: C.accent }}>{fcfa(recu.montant)}</Text>
           <Text style={[s.petit, { textAlign: 'center', marginTop: 6 }]}>
             {recu.statut === 'confirmee'
               ? `Merci ${membre.prenom || membre.nom} : votre cotisation renforce la tontine pour la santé.`
@@ -78,7 +78,7 @@ export default function Cotiser() {
 
       {mode ? (
         <Carte style={{ flexDirection: 'row', gap: 10, backgroundColor: C.bleuClair }}>
-          <Ionicons name="information-circle" size={20} color={C.bleu} />
+          <Ionicons name="information-circle" size={20} color={C.accent} />
           <Text style={[s.petit, { flex: 1, color: C.texte }]}>
             {mode === 'Espèces (bureau Pamezi)'
               ? 'Réglez la somme au bureau de la mutuelle et conservez votre reçu.'

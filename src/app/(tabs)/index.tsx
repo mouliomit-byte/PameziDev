@@ -103,7 +103,7 @@ export default function Accueil() {
       {REGLES_TONTINE.map((r) => (
         <Carte key={r.titre} style={{ flexDirection: 'row', gap: 14, alignItems: 'flex-start' }}>
           <View style={s.pastille}>
-            <Ionicons name={r.icone} size={22} color={C.bleu} />
+            <Ionicons name={r.icone} size={22} color={C.accent} />
           </View>
           <View style={{ flex: 1 }}>
             <Text style={[s.texte, { fontWeight: '800', color: C.bleuFonce }]}>{r.titre}</Text>
@@ -123,7 +123,7 @@ export default function Accueil() {
               <Text style={s.petit}>{f.personnes}</Text>
             </View>
             <View style={{ alignItems: 'flex-end' }}>
-              <Text style={{ fontSize: 20, fontWeight: '900', color: C.bleu }}>{fcfa(f.cotisation)}</Text>
+              <Text style={{ fontSize: 20, fontWeight: '900', color: C.accent }}>{fcfa(f.cotisation)}</Text>
               <Text style={s.petit}>par mois</Text>
             </View>
           </View>
@@ -150,7 +150,7 @@ export default function Accueil() {
       <Carte>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
           <View style={[s.pastille, { width: 52, height: 52, borderRadius: 14 }]}>
-            <Ionicons name="business" size={26} color={C.bleu} />
+            <Ionicons name="business" size={26} color={C.accent} />
           </View>
           <View style={{ flex: 1 }}>
             <Text style={[s.h2, { marginBottom: 2 }]}>{partenaire.nom}</Text>
@@ -187,7 +187,7 @@ export default function Accueil() {
           Association déclarée · Récépissé n° {RECEPISSE.numero}{'\n'}
           {RECEPISSE.autorite}, {RECEPISSE.date}
         </Text>
-        <Link href="/admin" style={[s.petit, { color: C.bleu, fontWeight: '700', marginTop: 6 }]}>
+        <Link href="/admin" style={[s.petit, { color: C.accent, fontWeight: '700', marginTop: 6 }]}>
           Espace gestionnaire
         </Link>
       </View>
@@ -205,7 +205,7 @@ function Contact({ icone, libelle, url, dernier }: { icone: IconName; libelle: s
         !dernier && { borderBottomWidth: 1, borderBottomColor: C.bord },
       ]}>
       <View style={[s.pastille, { width: 38, height: 38, borderRadius: 19 }]}>
-        <Ionicons name={icone} size={19} color={C.bleu} />
+        <Ionicons name={icone} size={19} color={C.accent} />
       </View>
       <Text style={[s.texte, { flex: 1, fontSize: 14 }]}>
         {libelle}

@@ -27,12 +27,12 @@ export function EcranAdmin({
     <Ecran large bords={['bottom']}>
       {!accueil && !router.canGoBack() ? (
         <Pressable accessibilityRole="link" onPress={() => router.replace('/admin')} style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 10, minHeight: 44 }}>
-          <Ionicons name="arrow-back" size={18} color={C.bleu} />
-          <Text style={[s.texte, { color: C.bleu, fontWeight: '700' }]}>Tableau de bord</Text>
+          <Ionicons name="arrow-back" size={18} color={C.accent} />
+          <Text style={[s.texte, { color: C.accent, fontWeight: '700' }]}>Tableau de bord</Text>
         </Pressable>
       ) : null}
       <Alerte texte={erreur ?? null} />
-      {chargement ? <ActivityIndicator color={C.bleu} style={{ marginVertical: 8 }} /> : null}
+      {chargement ? <ActivityIndicator color={C.accent} style={{ marginVertical: 8 }} /> : null}
       {children}
     </Ecran>
   );
@@ -41,7 +41,7 @@ export function EcranAdmin({
 export function Chargement() {
   return (
     <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: C.fond }}>
-      <ActivityIndicator color={C.bleu} size="large" />
+      <ActivityIndicator color={C.accent} size="large" />
     </View>
   );
 }
@@ -54,7 +54,7 @@ export function Tuile({ href, icone, titre, detail, alerte }: { href: '/admin/me
         onPress={() => router.push(href)}
         style={({ pressed }) => [s.carte, { flexGrow: 1, flexBasis: 220, marginBottom: 0, flexDirection: 'row', alignItems: 'center', gap: 12, opacity: pressed ? 0.8 : 1 }]}>
         <View style={s.pastille}>
-          <Ionicons name={icone} size={22} color={C.bleu} />
+          <Ionicons name={icone} size={22} color={C.accent} />
         </View>
         <View style={{ flex: 1 }}>
           <Text style={[s.texte, { fontWeight: '800' }]}>{titre}</Text>

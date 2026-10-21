@@ -55,7 +55,7 @@ export default function Membres() {
             value={q}
             onChangeText={setQ}
             placeholder="Nom, numéro, téléphone, localité…"
-            placeholderTextColor="#98A6B8"
+            placeholderTextColor={C.indice}
             style={{ flex: 1, paddingVertical: 12, fontSize: 16, color: C.texte }}
             accessibilityLabel="Rechercher un membre"
           />
@@ -86,7 +86,7 @@ export default function Membres() {
               </View>
               <View style={{ flexDirection: 'row', gap: 6, alignItems: 'flex-start' }}>
                 {m.statut !== 'actif' ? <Badge texte={LIBELLE_STATUT_MEMBRE[m.statut]} couleur={C.rouge} /> : null}
-                <Badge texte={m.aJour ? 'À jour' : 'En retard'} couleur={m.aJour ? C.vert : '#B7791F'} />
+                <Badge texte={m.aJour ? 'À jour' : 'En retard'} couleur={m.aJour ? C.vert : C.orange} />
               </View>
             </View>
             <Text style={[s.petit, { marginTop: 6 }]}>

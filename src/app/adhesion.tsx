@@ -190,7 +190,7 @@ export default function Adhesion() {
       <Text style={[s.petit, { marginBottom: 4 }]}>
         L’adhésion est libre, comme la démission. Elle peut être individuelle ou se faire via une association. Votre N° d’inscription est attribué à la validation.
       </Text>
-      <Link href="/connexion" replace style={[s.texte, { color: C.bleu, fontWeight: '700', marginBottom: 4 }]}>
+      <Link href="/connexion" replace style={[s.texte, { color: C.accent, fontWeight: '700', marginBottom: 4 }]}>
         Déjà membre ? Se connecter
       </Link>
 
@@ -241,7 +241,7 @@ export default function Adhesion() {
           </View>
         ) : (
           <View style={{ borderWidth: 1.5, borderStyle: 'dashed', borderColor: C.bleuPale, borderRadius: 12, padding: 16, alignItems: 'center', gap: 6 }}>
-            <Ionicons name="camera" size={30} color={C.bleu} />
+            <Ionicons name="camera" size={30} color={C.accent} />
             <Text style={[s.petit, { textAlign: 'center' }]}>Photographiez le recto de votre CNI à plat, bien éclairée, ou choisissez un scan.</Text>
           </View>
         )}
@@ -292,13 +292,13 @@ export default function Adhesion() {
                 onPress={() => setFormule(f.id)}
                 accessibilityRole="radio"
                 accessibilityState={{ selected: actif }}
-                style={{ flexDirection: 'row', alignItems: 'center', gap: 12, borderWidth: 2, borderColor: actif ? C.bleu : C.bord, backgroundColor: actif ? C.bleuClair : C.blanc, borderRadius: 14, padding: 14 }}>
-                <Ionicons name={actif ? 'radio-button-on' : 'radio-button-off'} size={22} color={actif ? C.bleu : C.gris} />
+                style={{ flexDirection: 'row', alignItems: 'center', gap: 12, borderWidth: 2, borderColor: actif ? C.bleu : C.bord, backgroundColor: actif ? C.bleuClair : C.surface, borderRadius: 14, padding: 14 }}>
+                <Ionicons name={actif ? 'radio-button-on' : 'radio-button-off'} size={22} color={actif ? C.accent : C.gris} />
                 <View style={{ flex: 1 }}>
                   <Text style={[s.texte, { fontWeight: '800' }]}>{f.nom}</Text>
                   <Text style={s.petit}>{`${f.personnes} · ${f.taux} % pris en charge`}</Text>
                 </View>
-                <Text style={{ fontWeight: '900', color: C.bleu }}>{fcfa(f.cotisation)}</Text>
+                <Text style={{ fontWeight: '900', color: C.accent }}>{fcfa(f.cotisation)}</Text>
               </Pressable>
             );
           })}
@@ -335,7 +335,7 @@ export default function Adhesion() {
         accessibilityState={{ checked: accepte }}
         onPress={() => setAccepte(!accepte)}
         style={{ flexDirection: 'row', gap: 10, alignItems: 'flex-start', marginBottom: 8, minHeight: 44 }}>
-        <Ionicons name={accepte ? 'checkbox' : 'square-outline'} size={22} color={accepte ? C.bleu : C.gris} />
+        <Ionicons name={accepte ? 'checkbox' : 'square-outline'} size={22} color={accepte ? C.accent : C.gris} />
         <Text style={[s.petit, { flex: 1, color: C.texte }]}>
           Je certifie l’exactitude de ces informations, j’accepte les statuts de la Mutuelle de Santé Pamezi et je m’engage à cotiser chaque mois.
         </Text>

@@ -39,7 +39,8 @@ js = js.replace(/<\/script/gi, '<\\/script');
 const page = `<title>${TITRE}</title>
 <meta name="theme-color" content="#0070C6">
 <style>
-  :root { --fond: #F5FAFE; color-scheme: light; }
+  :root { --fond: #F5FAFE; color-scheme: light dark; }
+  @media (prefers-color-scheme: dark) { :root { --fond: #0A1520; } }
   html, body { height: 100%; }
   body { background: var(--fond); overflow: hidden; }
   #root { display: flex; height: 100%; flex: 1; }

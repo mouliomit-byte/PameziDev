@@ -44,7 +44,7 @@ export default function Connexion() {
       {modeDemo ? <Alerte type="info" texte="Démonstration : les membres fictifs se connectent avec le code 1234 (numéros 690 00 01 01 à 690 00 01 30)." /> : null}
       <Alerte texte={erreur} />
       <Bouton titre={envoi ? 'Connexion…' : 'Se connecter'} icone="log-in" onPress={valider} desactive={!valide} />
-      <Link href="/adhesion" replace style={[s.texte, { color: C.bleu, fontWeight: '700', textAlign: 'center', marginTop: 18 }]}>
+      <Link href="/adhesion" replace style={[s.texte, { color: C.accent, fontWeight: '700', textAlign: 'center', marginTop: 18 }]}>
         Pas encore membre ? Adhérer
       </Link>
     </Ecran>

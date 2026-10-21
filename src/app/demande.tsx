@@ -52,7 +52,7 @@ export default function Demande() {
       <Ecran bords={['bottom']}>
         <Carte style={{ alignItems: 'center', paddingVertical: 26 }}>
           <View style={[s.pastille, { width: 76, height: 76, borderRadius: 38 }]}>
-            <Ionicons name="paper-plane" size={36} color={C.bleu} />
+            <Ionicons name="paper-plane" size={36} color={C.accent} />
           </View>
           <Text style={[s.h2, { marginTop: 12 }]}>Demande transmise</Text>
           <Text style={[s.petit, { textAlign: 'center' }]}>Elle sera examinée par la mutuelle. Suivez son statut dans l’onglet Soins.</Text>
