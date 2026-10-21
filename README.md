@@ -89,6 +89,8 @@ Vérifications :
 ```bash
 npm run typecheck && npm run lint   # application
 npm run serveur:test                # 18 tests de l'API (adhésion → back office)
+npm run build:artifact              # application en un seul fichier HTML (démonstration)
+npm run build:artifact -- --back-office  # idem, ouverte directement sur le back office
 ```
 
 ## Déployer en production
