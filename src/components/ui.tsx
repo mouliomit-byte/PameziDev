@@ -1,24 +1,29 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { ReactNode } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, TextInput, TextInputProps, View, ViewStyle } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-// Identité visuelle reprise de l'affiche : bleu Pamezi + couleurs du Cameroun.
+// Couleurs relevées sur l'affiche officielle de la Mutuelle de Santé Pamezi.
 export const C = {
-  bleu: '#0B5FB0',
-  bleuFonce: '#073D75',
-  bleuNuit: '#062B54',
-  bleuClair: '#E8F1FB',
-  bleuPale: '#C9DEF5',
-  vert: '#007A3D',
-  rouge: '#CE1126',
+  bleu: '#0070C6', // bandeaux et cercles d'icônes
+  bleuVif: '#1580DB', // pastilles de titres, haut des dégradés
+  bleuFonce: '#0B59A3', // titres (« MUTUELLE DE SANTÉ PAMEZI »)
+  bleuNuit: '#084A88', // bas des dégradés
+  bleuClair: '#E6F3FC', // fonds de pastilles
+  bleuPale: '#C6E6F9', // vagues bleu ciel, textes sur bleu
+  vert: '#007A5E', // drapeau du Cameroun
+  rouge: '#D91613',
   jaune: '#FCD116',
-  texte: '#0F1E33',
-  gris: '#5B6B80',
-  bord: '#DCE4EE',
-  fond: '#F3F6FA',
+  texte: '#123A61', // texte bleu profond, comme sur l'affiche
+  gris: '#56708C',
+  bord: '#D6E6F4',
+  fond: '#F5FAFE',
   blanc: '#FFFFFF',
 };
+
+/** Dégradé bleu des bandeaux de l'affiche. */
+export const DEGRADE = [C.bleuVif, C.bleu, C.bleuNuit] as const;
 
 export type IconName = keyof typeof Ionicons.glyphMap;
 
@@ -94,6 +99,14 @@ export function Section({ icone, children }: { icone: IconName; children: ReactN
       </View>
       <Text style={s.sectionTexte}>{children}</Text>
     </View>
+  );
+}
+
+export function Degrade({ children, style }: { children?: ReactNode; style?: ViewStyle }) {
+  return (
+    <LinearGradient colors={DEGRADE} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={[{ overflow: 'hidden' }, style]}>
+      {children}
+    </LinearGradient>
   );
 }
 
@@ -219,7 +232,7 @@ export function Vide({ icone, texte, children }: { icone: IconName; texte: strin
 }
 
 const ombre = {
-  shadowColor: '#0B3A6E',
+  shadowColor: '#0B59A3',
   shadowOpacity: 0.08,
   shadowRadius: 12,
   shadowOffset: { width: 0, height: 4 },
@@ -236,7 +249,7 @@ export const s = StyleSheet.create({
   petit: { fontSize: 13, color: C.gris, lineHeight: 19 },
   carte: { backgroundColor: C.blanc, borderRadius: 18, padding: 18, marginBottom: 14, ...ombre },
   section: { flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: 10, marginBottom: 12 },
-  sectionIcone: { backgroundColor: C.bleu, width: 32, height: 32, borderRadius: 16, alignItems: 'center', justifyContent: 'center' },
+  sectionIcone: { backgroundColor: C.bleuVif, width: 32, height: 32, borderRadius: 16, alignItems: 'center', justifyContent: 'center' },
   sectionTexte: { fontSize: 15, fontWeight: '900', color: C.bleuFonce, textTransform: 'uppercase', letterSpacing: 0.6, flex: 1 },
   bouton: {
     flexDirection: 'row',

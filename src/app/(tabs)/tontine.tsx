@@ -2,7 +2,7 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { router } from 'expo-router';
 import { Share, Text, View } from 'react-native';
 
-import { Badge, Bouton, C, Carte, Ecran, Ligne, s, Section, Titre, Vide } from '@/components/ui';
+import { Badge, Bouton, C, Carte, Degrade, Ecran, Ligne, s, Section, Titre, Vide } from '@/components/ui';
 import { CONTACTS, dateFr, fcfa, nombre, OBJECTIF_ADHERENTS, SLOGAN, SOLIDARITE } from '@/lib/data';
 import { situation, usePamezi } from '@/lib/store';
 
@@ -38,7 +38,7 @@ export default function Tontine() {
     <Ecran>
       <Titre sous={SOLIDARITE}>Tontine santé</Titre>
 
-      <View style={{ backgroundColor: C.bleu, borderRadius: 22, padding: 20, marginBottom: 14 }}>
+      <Degrade style={{ borderRadius: 22, padding: 20, marginBottom: 14 }}>
         <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
           <Text style={{ color: C.bleuPale, fontSize: 14, fontWeight: '600' }}>Ma participation</Text>
           <View style={{ backgroundColor: sit.aJour ? C.jaune : '#FFD7D2', borderRadius: 8, paddingHorizontal: 9, paddingVertical: 4 }}>
@@ -52,7 +52,7 @@ export default function Tontine() {
           {sit.moisPayes} mois payés · {fcfa(formule.cotisation)} par mois · formule {formule.nom}
         </Text>
         <Bouton titre="Cotiser" icone="wallet" variante="blanc" onPress={() => router.push('/cotiser')} />
-      </View>
+      </Degrade>
 
       <Carte>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>

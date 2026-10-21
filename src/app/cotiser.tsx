@@ -3,7 +3,7 @@ import { router } from 'expo-router';
 import { useState } from 'react';
 import { Text, View } from 'react-native';
 
-import { Bouton, C, Carte, Choix, Ecran, Ligne, s, Tricolore, Vide } from '@/components/ui';
+import { Bouton, C, Carte, Choix, Degrade, Ecran, Ligne, s, Tricolore, Vide } from '@/components/ui';
 import { dateFr, fcfa, MODES_PAIEMENT, ModePaiement } from '@/lib/data';
 import { Cotisation, usePamezi } from '@/lib/store';
 
@@ -59,13 +59,13 @@ export default function Cotiser() {
 
   return (
     <Ecran bords={['bottom']}>
-      <View style={{ backgroundColor: C.bleu, borderRadius: 20, padding: 20, marginBottom: 18 }}>
+      <Degrade style={{ borderRadius: 20, padding: 20, marginBottom: 18 }}>
         <Text style={{ color: C.bleuPale, fontWeight: '600' }}>Formule {formule.nom} · {membre.numero}</Text>
         <Text style={{ fontSize: 32, fontWeight: '900', color: C.blanc, marginTop: 4 }}>{fcfa(montant)}</Text>
         <Text style={{ color: C.blanc }}>
           {fcfa(formule.cotisation)} × {mois} mois
         </Text>
-      </View>
+      </Degrade>
 
       <Choix label="Je paie pour" options={DUREES} valeur={duree} onChange={setDuree} />
       <Choix label="Moyen de paiement" options={MODES_PAIEMENT} valeur={mode} onChange={setMode} />

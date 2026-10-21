@@ -2,7 +2,7 @@ import { router } from 'expo-router';
 import { useState } from 'react';
 import { Text, View } from 'react-native';
 
-import { Bouton, C, Carte, Ecran, Ligne, Logo, s, Section, Titre, Tricolore, Vide } from '@/components/ui';
+import { Bouton, C, Carte, Degrade, Ecran, Ligne, Logo, s, Section, Titre, Tricolore, Vide } from '@/components/ui';
 import { CONTACTS, dateFr, SLOGAN } from '@/lib/data';
 import { situation, usePamezi } from '@/lib/store';
 
@@ -28,8 +28,8 @@ export default function Profil() {
       <Titre sous="À présenter au centre de santé">Ma carte de membre</Titre>
 
       {/* Carte de membre */}
-      <View style={{ backgroundColor: C.bleu, borderRadius: 22, overflow: 'hidden', marginBottom: 16 }}>
-        <View style={{ position: 'absolute', right: -50, top: -50, width: 190, height: 190, borderRadius: 95, backgroundColor: C.bleuFonce, opacity: 0.6 }} />
+      <Degrade style={{ borderRadius: 22, marginBottom: 16 }}>
+        <View style={{ position: 'absolute', right: -50, top: -50, width: 190, height: 190, borderRadius: 95, backgroundColor: C.bleuVif, opacity: 0.45 }} />
         <View style={{ padding: 20 }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
             <Logo taille={42} inverse />
@@ -46,11 +46,11 @@ export default function Profil() {
             <Info titre="STATUT" valeur={sit.aJour ? 'Actif' : 'Suspendu'} couleur={sit.aJour ? C.jaune : '#FFB4A8'} />
           </View>
         </View>
-        <View style={{ backgroundColor: C.bleuNuit, paddingHorizontal: 20, paddingVertical: 10, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+        <View style={{ backgroundColor: 'rgba(4,40,80,0.45)', paddingHorizontal: 20, paddingVertical: 10, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
           <Text style={{ color: C.bleuPale, fontSize: 12, fontStyle: 'italic' }}>{SLOGAN}</Text>
           <Tricolore largeur={42} />
         </View>
-      </View>
+      </Degrade>
 
       <Section icone="person">Mes informations</Section>
       <Carte style={{ paddingVertical: 6 }}>

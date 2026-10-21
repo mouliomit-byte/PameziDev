@@ -12,7 +12,7 @@
     },
     "android": {
       "adaptiveIcon": {
-        "backgroundColor": "#0B5FB0",
+        "backgroundColor": "#0070C6",
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
@@ -25,8 +25,8 @@
       "name": "Mutuelle de Santé Pamezi",
       "output": "single",
       "shortName": "Pamezi",
-      "themeColor": "#0B5FB0",
-      "backgroundColor": "#F3F6FA"
+      "themeColor": "#0070C6",
+      "backgroundColor": "#F5FAFE"
     },
     "plugins": [
       "expo-router"

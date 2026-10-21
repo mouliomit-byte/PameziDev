@@ -2,7 +2,7 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { router } from 'expo-router';
 import { Linking, Pressable, Text, View } from 'react-native';
 
-import { Badge, Bouton, C, Carte, Ecran, IconName, Logo, Numero, s, Section, Tricolore } from '@/components/ui';
+import { Badge, Bouton, C, Carte, Degrade, Ecran, IconName, Logo, Numero, s, Section, Tricolore } from '@/components/ui';
 import {
   CENTRES,
   CONTACTS,
@@ -27,8 +27,8 @@ export default function Accueil() {
   return (
     <Ecran>
       {/* En-tête */}
-      <View style={{ backgroundColor: C.bleu, borderRadius: 24, padding: 22, marginBottom: 16, overflow: 'hidden' }}>
-        <View style={{ position: 'absolute', right: -60, top: -60, width: 200, height: 200, borderRadius: 100, backgroundColor: C.bleuFonce, opacity: 0.5 }} />
+      <Degrade style={{ borderRadius: 24, padding: 22, marginBottom: 16 }}>
+        <View style={{ position: 'absolute', right: -60, top: -60, width: 200, height: 200, borderRadius: 100, backgroundColor: C.bleuVif, opacity: 0.45 }} />
         <View style={{ position: 'absolute', right: 30, bottom: -70, width: 160, height: 160, borderRadius: 80, backgroundColor: '#ffffff', opacity: 0.06 }} />
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
           <Logo taille={58} inverse />
@@ -46,7 +46,7 @@ export default function Accueil() {
           <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: C.jaune }} />
           <Text style={{ color: C.blanc, fontSize: 13, fontWeight: '700' }}>Inscriptions et cotisations ouvertes</Text>
         </View>
-      </View>
+      </Degrade>
 
       {/* Appel à l'action ou situation du membre */}
       {membre && formule ? (
@@ -76,8 +76,8 @@ export default function Accueil() {
       )}
 
       {/* Objectif d'adhérents */}
-      <View style={{ backgroundColor: C.bleuFonce, borderRadius: 20, padding: 20, marginBottom: 14, flexDirection: 'row', alignItems: 'center', gap: 16 }}>
-        <View style={{ backgroundColor: C.bleu, width: 56, height: 56, borderRadius: 28, alignItems: 'center', justifyContent: 'center' }}>
+      <Degrade style={{ borderRadius: 20, padding: 20, marginBottom: 14, flexDirection: 'row', alignItems: 'center', gap: 16 }}>
+        <View style={{ backgroundColor: 'rgba(255,255,255,0.18)', width: 56, height: 56, borderRadius: 28, alignItems: 'center', justifyContent: 'center' }}>
           <Ionicons name="megaphone" size={28} color={C.blanc} />
         </View>
         <View style={{ flex: 1 }}>
@@ -87,7 +87,7 @@ export default function Accueil() {
           </Text>
           <Text style={{ color: C.blanc, fontSize: 15, fontWeight: '700' }}>adhérents</Text>
         </View>
-      </View>
+      </Degrade>
 
       {/* Objectifs */}
       <Section icone="locate">La mutuelle a pour objectif de</Section>
@@ -179,7 +179,7 @@ export default function Accueil() {
 
       {/* Pied de page */}
       <View style={{ alignItems: 'center', marginTop: 18, gap: 10 }}>
-        <Text style={{ color: C.bleu, fontSize: 18, fontWeight: '800', fontStyle: 'italic', textAlign: 'center' }}>{SOLIDARITE}</Text>
+        <Text style={{ color: C.bleuFonce, fontSize: 18, fontWeight: '800', fontStyle: 'italic', textAlign: 'center' }}>{SOLIDARITE}</Text>
         <Tricolore largeur={140} />
         <Text style={[s.petit, { textAlign: 'center', marginTop: 6 }]}>
           Association déclarée · Récépissé n° {RECEPISSE.numero}{'\n'}
