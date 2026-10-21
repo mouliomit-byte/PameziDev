@@ -113,6 +113,9 @@ npm run fonction:preparer
 npx supabase functions deploy api --no-verify-jwt --project-ref ghzlndruycdlujbdbrwm
 ```
 
+**Données fictives** (30 membres, PMZ-DEMO-0001 à 0030, téléphones 690 00 01 01 à 30, code 1234) :
+`npm run fictifs:generer` produit le SQL ; `scripts/fictifs/supprimer.sql` les efface toutes avant le lancement.
+
 Les artefacts claude.ai restent en mode démonstration : une page d'artefact ne peut joindre aucun serveur extérieur.
 
 ## Déployer en production

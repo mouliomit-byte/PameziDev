@@ -43,3 +43,4 @@ dist-artifact/
 server/donnees/
 .env
 supabase/functions/api/_lib/
+scripts/fictifs/inserer.sql

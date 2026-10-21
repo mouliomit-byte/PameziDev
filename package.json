@@ -39,7 +39,8 @@
     "build:artifact": "node scripts/build-artifact.mjs",
     "serveur": "npm --prefix server start",
     "serveur:test": "npm --prefix server test",
-    "fonction:preparer": "node scripts/preparer-fonction.mjs"
+    "fonction:preparer": "node scripts/preparer-fonction.mjs",
+    "fictifs:generer": "node --no-warnings scripts/fictifs/generer.ts"
   },
   "private": true
 }
