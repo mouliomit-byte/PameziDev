@@ -10,5 +10,5 @@
     }
   },
   "include": ["**/*.ts", "**/*.tsx", ".expo/types/**/*.ts", "expo-env.d.ts"],
-  "exclude": ["node_modules", "server", "supabase", "dist", "dist-artifact"]
+  "exclude": ["node_modules", "server", "supabase", "scripts", "dist", "dist-artifact"]
 }

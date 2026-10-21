@@ -41,7 +41,7 @@ export default function Connexion() {
         placeholder="••••"
         aide="Code oublié ? Le bureau de la mutuelle peut vous en donner un nouveau."
       />
-      {modeDemo ? <Alerte type="info" texte="Démonstration : les membres d’exemple se connectent avec le code 1234 (ex. 670 00 01 01)." /> : null}
+      {modeDemo ? <Alerte type="info" texte="Démonstration : les membres fictifs se connectent avec le code 1234 (numéros 690 00 01 01 à 690 00 01 30)." /> : null}
       <Alerte texte={erreur} />
       <Bouton titre={envoi ? 'Connexion…' : 'Se connecter'} icone="log-in" onPress={valider} desactive={!valide} />
       <Link href="/adhesion" replace style={[s.texte, { color: C.bleu, fontWeight: '700', textAlign: 'center', marginTop: 18 }]}>

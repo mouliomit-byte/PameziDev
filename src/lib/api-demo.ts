@@ -5,14 +5,15 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { creerDepotMemoire, type EtatMemoire, etatVide } from '@shared/depot-memoire';
-import { ErreurMetier, type ModePaiement } from '@shared/regles';
+import { type Cotisation, type Demande, ErreurMetier, type Membre } from '@shared/regles';
 import * as S from '@shared/service';
 
 import type { Api } from './api';
 import { SPECIMEN_CNI } from './specimen-cni';
+import FICTIFS from './demo-fictifs.json';
 import { ErreurApi } from './erreurs';
 
-const CLE = 'pamezi:demo:v2'; // v2 : identité complète (nom, prénom, naissance, CNI)
+const CLE = 'pamezi:demo:v3'; // v3 : les 30 membres fictifs de la base en ligne
 export const DEMO_ADMIN = { email: 'proprietaire@pamezi.cm', motDePasse: 'demo-pamezi' };
 
 // Les codes secrets ne protègent rien en démonstration : simple empreinte non cryptographique.
@@ -27,55 +28,18 @@ const secretsDemo: S.Secrets = {
   identifiant: () => `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`,
 };
 
-// Membres d'exemple (fictifs) pour que le back office montre quelque chose dès l'ouverture.
-const EXEMPLES: { nom: string; prenom: string; ne: string; lieu: string; tel: string; localite: string; formuleId: string; ayants: number; ilYa: number; mois: number[]; asso?: string }[] = [
-  { nom: 'Mfondi', prenom: 'Ibrahim', ne: '12/03/1978', lieu: 'Foumban', tel: '670000101', localite: 'Foumban', formuleId: 'famille', ayants: 5, ilYa: 4, mois: [3, 2] },
-  { nom: 'Njoya', prenom: 'Mariama', ne: '04/11/1990', lieu: 'Foumbot', tel: '670000102', localite: 'Foumbot', formuleId: 'essentiel', ayants: 0, ilYa: 3, mois: [4] },
-  { nom: 'Pefoura', prenom: 'Abdou', ne: '21/06/1969', lieu: 'Koutaba', tel: '670000103', localite: 'Koutaba', formuleId: 'serenite', ayants: 6, ilYa: 2, mois: [3] },
-  { nom: 'Mbouombouo', prenom: 'Fadimatou', ne: '09/09/1985', lieu: 'Njimom', tel: '670000104', localite: 'Njimom', formuleId: 'famille', ayants: 3, ilYa: 2, mois: [3], asso: 'Association des femmes de Njimom' },
-  { nom: 'Nchare', prenom: 'Salifou', ne: '30/01/1995', lieu: 'Massangam', tel: '670000105', localite: 'Massangam', formuleId: 'essentiel', ayants: 0, ilYa: 1, mois: [1] },
-  { nom: 'Mounpain', prenom: 'Awa', ne: '17/05/1988', lieu: 'Malantouen', tel: '670000106', localite: 'Malantouen', formuleId: 'famille', ayants: 4, ilYa: 0, mois: [] },
-];
-
+// Les 30 membres fictifs de la base en ligne (scripts/fictifs/generer.ts), avec leurs cotisations
+// et demandes : le mode démonstration montre les mêmes données que le back office en ligne.
 async function amorcer(ctx: S.Contexte) {
   await S.initialiser(ctx, { email: DEMO_ADMIN.email, nom: 'Propriétaire (démo)', motDePasse: DEMO_ADMIN.motDePasse });
   if ((await ctx.depot.membres.tous()).length > 0) return;
-  const maintenant = new Date();
-  for (const [i, e] of EXEMPLES.entries()) {
-    const date = new Date(maintenant.getFullYear(), maintenant.getMonth() - e.ilYa, 5 + i, 10);
-    const passe = { ...ctx, maintenant: () => date };
-    const p = await S.adherer(passe, {
-      nom: e.nom,
-      prenom: e.prenom,
-      dateNaissance: e.ne,
-      lieuNaissance: e.lieu,
-      cni: `10${e.tel.slice(-7)}`,
-      cniPhoto: SPECIMEN_CNI,
-      telephone: e.tel,
-      localite: e.localite,
-      typeAdhesion: e.asso ? 'Via une association' : 'Individuelle',
-      association: e.asso,
-      formuleId: e.formuleId,
-      ayantsDroit: e.ayants,
-      pin: '1234',
-    });
-    let mois = 0;
-    for (const m of e.mois) {
-      const quand = { ...ctx, maintenant: () => new Date(date.getFullYear(), date.getMonth() + mois, 8, 9) };
-      await S.cotiser(quand, p.membre.id, m, (i % 2 ? 'Orange Money' : 'MTN Mobile Money') as ModePaiement);
-      mois += m;
-    }
+  const pinHash = await secretsDemo.hacher('1234');
+  for (const m of FICTIFS.membres) {
+    await ctx.depot.membres.inserer({ ...(m as unknown as Membre), pinHash });
+    await ctx.depot.pieces.inserer({ id: m.id, cniPhoto: SPECIMEN_CNI, ajouteLe: m.dateAdhesion });
   }
-  const membres = await ctx.depot.membres.tous();
-  const par = (tel: string) => membres.find((m) => m.telephone === tel)!.id;
-  // Une cotisation en espèces à confirmer, et des demandes à différents stades.
-  await S.cotiser(ctx, par('670000106'), 1, 'Espèces (bureau Pamezi)');
-  const admin = (await ctx.depot.admins.tous())[0];
-  await S.demander(ctx, par('670000101'), { centre: 'Hôpital Nah Pôn', motif: 'Consultation', montant: 12000 });
-  await S.demander(ctx, par('670000102'), { centre: 'Hôpital Nah Pôn', motif: 'Analyses', montant: 8500 });
-  const d3 = await S.demander(ctx, par('670000103'), { centre: 'Hôpital Nah Pôn', motif: 'Imagerie', montant: 45000 });
-  await S.traiterDemande(ctx, admin, d3.demande.id, 'validee');
-  await S.traiterDemande(ctx, admin, d3.demande.id, 'payee', 'Réglé à l’hôpital');
+  for (const c of FICTIFS.cotisations) await ctx.depot.cotisations.inserer(c as unknown as Cotisation);
+  for (const d of FICTIFS.demandes) await ctx.depot.demandes.inserer(d as unknown as Demande);
 }
 
 export function creerApiDemo(): Api {
