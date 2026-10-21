@@ -51,6 +51,7 @@ Montants, taux et liste des centres sont des **valeurs de départ** à ajuster d
 npm install
 npx expo start        # puis « a » (Android), « i » (iOS) ou « w » (Web)
 npm run build:web     # version Web statique dans dist/
+npm run build:artifact # version Web en un seul fichier HTML (dist-artifact/), pour un artefact
 npm run typecheck
 npm run lint
 ```

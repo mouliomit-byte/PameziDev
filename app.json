@@ -29,7 +29,14 @@
       "backgroundColor": "#F5FAFE"
     },
     "plugins": [
-      "expo-router"
+      [
+        "expo-router",
+        {
+          "asyncRoutes": {
+            "web": false
+          }
+        }
+      ]
     ],
     "scheme": "pamezi",
     "experiments": {
