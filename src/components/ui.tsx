@@ -1,6 +1,6 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { ReactNode, useId } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, TextInput, TextInputProps, View, ViewStyle } from 'react-native';
+import { Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, TextInputProps, View, ViewStyle } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Svg, { Circle, Defs, LinearGradient as SvgGradient, Path, Stop } from 'react-native-svg';
@@ -27,7 +27,8 @@ const CLAIR = {
   // Fond et cartes adoucis (gris bleuté, blanc cassé) : pas de blanc pur qui éblouit.
   bord: '#CCDAE7',
   fond: '#E8EEF4',
-  surface: '#F6F8FA', // cartes, champs
+  surface: '#F6F8FA', // champs, boutons
+  verre: '#F6F8FA', // cartes et barres (transparentes si l'effet est activé)
   blanc: '#FFFFFF', // texte sur fond bleu
   encre: '#0B59A3', // texte foncé sur bouton blanc (bandeaux)
   degrade: ['#1580DB', '#0070C6', '#084A88'] as [string, string, string],
@@ -53,6 +54,7 @@ const SOMBRE: typeof CLAIR = {
   bord: '#243B53',
   fond: '#0A1520',
   surface: '#122334',
+  verre: '#122334',
   blanc: '#FFFFFF',
   encre: '#0B59A3',
   degrade: ['#1668B5', '#0E5698', '#07335F'],
@@ -126,6 +128,13 @@ let themeActif: Theme = 'clair';
 let couleurActive: CouleurApp = 'bleu';
 export const themeCourant = () => themeActif;
 
+/** Niveaux d'effet de transparence proposés (en %). */
+export const TRANSPARENCES = [0, 25, 45, 65] as const;
+export type Transparence = (typeof TRANSPARENCES)[number];
+let transparenceActive: Transparence = 0;
+export const transparenceCourante = () => transparenceActive;
+
+
 export type IconName = keyof typeof Ionicons.glyphMap;
 
 export function Ecran({
@@ -140,10 +149,28 @@ export function Ecran({
 }) {
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: C.fond }} edges={bords}>
+      {transparenceActive ? <FondDecore /> : null}
       <ScrollView contentContainerStyle={s.ecran} keyboardShouldPersistTaps="handled">
         <View style={[s.colonne, large && { maxWidth: 1120 }]}>{children}</View>
       </ScrollView>
     </SafeAreaView>
+  );
+}
+
+/** Fond décoré (dégradé doux et halos aux couleurs de l'application), visible à travers les cartes en verre. */
+function FondDecore() {
+  const sombre = themeActif === 'sombre';
+  const halo = (couleur: string, opacite: number, pos: ViewStyle) => (
+    <View style={[{ position: 'absolute', width: 340, height: 340, borderRadius: 170, backgroundColor: couleur, opacity: opacite }, pos]} />
+  );
+  return (
+    <View pointerEvents="none" style={[StyleSheet.absoluteFill, { overflow: 'hidden' }]}>
+      <LinearGradient colors={[C.fond, C.bleuClair, C.fond]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={StyleSheet.absoluteFill} />
+      {halo(C.bleuVif, sombre ? 0.22 : 0.16, { top: -90, right: -110 })}
+      {halo(C.jaune, sombre ? 0.07 : 0.12, { top: '38%', left: -170 })}
+      {halo(C.bleu, sombre ? 0.2 : 0.13, { bottom: -120, right: -60 })}
+      {halo(C.vert, sombre ? 0.1 : 0.08, { bottom: '22%', left: '35%', width: 220, height: 220 })}
+    </View>
   );
 }
 
@@ -352,7 +379,7 @@ const creerStyles = () => StyleSheet.create({
   texte: { fontSize: 15, color: C.texte, lineHeight: 22 },
   petit: { fontSize: 13, color: C.gris, lineHeight: 19 },
   carte: {
-    backgroundColor: C.surface,
+    backgroundColor: C.verre,
     borderRadius: 18,
     padding: 18,
     marginBottom: 14,
@@ -360,10 +387,12 @@ const creerStyles = () => StyleSheet.create({
     shadowOpacity: themeActif === 'sombre' ? 0.3 : 0.08,
     shadowRadius: 12,
     shadowOffset: { width: 0, height: 4 },
-    elevation: 2,
-    // En sombre, l'ombre se voit peu : un filet délimite les cartes.
-    borderWidth: themeActif === 'sombre' ? 1 : 0,
-    borderColor: C.bord,
+    // Android dessine l'ombre à travers une carte transparente : pas d'ombre dans ce cas.
+    elevation: transparenceActive ? 0 : 2,
+    // En sombre ou en verre, un filet délimite les cartes.
+    borderWidth: themeActif === 'sombre' || transparenceActive ? 1 : 0,
+    borderColor: transparenceActive ? (themeActif === 'sombre' ? '#FFFFFF1F' : '#FFFFFFB3') : C.bord,
+    ...(Platform.OS === 'web' && transparenceActive ? ({ backdropFilter: 'blur(14px) saturate(140%)' } as object) : {}),
   },
   section: { flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: 10, marginBottom: 12 },
   sectionIcone: { backgroundColor: C.bleuVif, width: 32, height: 32, borderRadius: 16, alignItems: 'center', justifyContent: 'center' },
@@ -415,11 +444,15 @@ const creerStyles = () => StyleSheet.create({
 export const s = creerStyles();
 
 /** Passe toute l'interface en clair ou en sombre ; les écrans sont ensuite redessinés (voir lib/theme). */
-export function appliquerTheme(theme: Theme, couleur: CouleurApp = couleurActive) {
-  if (theme === themeActif && couleur === couleurActive) return;
+export function appliquerTheme(theme: Theme, couleur: CouleurApp = couleurActive, transparence: Transparence = transparenceActive) {
+  if (theme === themeActif && couleur === couleurActive && transparence === transparenceActive) return;
   themeActif = theme;
   couleurActive = couleur;
-  Object.assign(C, palette(theme, couleur));
+  transparenceActive = transparence;
+  const p = palette(theme, couleur);
+  // Cartes et barres en verre : la couleur de surface laisse voir le fond décoré.
+  const opacite = Math.round((1 - transparence / 100) * 255).toString(16).padStart(2, '0').toUpperCase();
+  Object.assign(C, p, { verre: transparence ? `${p.surface}${opacite}` : p.surface });
   Object.assign(s, creerStyles());
 }
 

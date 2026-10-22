@@ -23,7 +23,7 @@ function BoutonRond({ icone, libelle, onPress, pastille }: { icone: IconName; li
         borderRadius: 21,
         alignItems: 'center',
         justifyContent: 'center',
-        backgroundColor: C.surface,
+        backgroundColor: C.verre,
         borderWidth: 1,
         borderColor: C.bord,
         opacity: pressed ? 0.7 : 1,

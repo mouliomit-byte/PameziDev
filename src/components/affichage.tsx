@@ -2,7 +2,7 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Pressable, Text, View } from 'react-native';
 
-import { C, Choix, s, TEINTES } from '@/components/ui';
+import { C, Choix, s, TEINTES, type Transparence, TRANSPARENCES } from '@/components/ui';
 import { type PreferenceAffichage, useAffichage } from '@/lib/theme';
 import { COULEURS_APP, type CouleurApp, LIBELLE_COULEUR } from '@shared/regles';
 
@@ -18,6 +18,21 @@ export function ChoixAffichage() {
       options={OPTIONS}
       valeur={LIBELLES[preference]}
       onChange={(v) => choisir((Object.keys(LIBELLES) as PreferenceAffichage[]).find((k) => LIBELLES[k] === v) ?? 'auto')}
+    />
+  );
+}
+
+const LIBELLE_TRANSPARENCE = (t: Transparence) => (t ? `${t} %` : 'Aucune');
+
+/** Effet de verre : transparence des cartes et des barres, sur un fond décoré. */
+export function ChoixTransparence() {
+  const { transparence, choisirTransparence } = useAffichage();
+  return (
+    <Choix
+      label="Transparence"
+      options={TRANSPARENCES.map(LIBELLE_TRANSPARENCE)}
+      valeur={LIBELLE_TRANSPARENCE(transparence)}
+      onChange={(v) => choisirTransparence(TRANSPARENCES.find((t) => LIBELLE_TRANSPARENCE(t) === v) ?? 0)}
     />
   );
 }

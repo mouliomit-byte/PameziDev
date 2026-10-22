@@ -4,7 +4,7 @@ import { Text, View } from 'react-native';
 
 import { OutilsAbonne } from '@/components/notifications';
 import { Bouton, C, Carte, Degrade, Ecran, Ligne, Logo, s, Section, Titre, Tricolore, Vide } from '@/components/ui';
-import { ChoixAffichage } from '@/components/affichage';
+import { ChoixAffichage, ChoixTransparence } from '@/components/affichage';
 import { CONTACTS, dateFr, SLOGAN } from '@/lib/data';
 import { useActualiserAuFocus, usePamezi } from '@/lib/store';
 import { formaterTelephone, LIBELLE_STATUT_MEMBRE, nomComplet } from '@shared/regles';
@@ -26,6 +26,7 @@ export default function Profil() {
         <Section icone="contrast">Affichage</Section>
         <Carte>
           <ChoixAffichage />
+        <ChoixTransparence />
         </Carte>
       </Ecran>
     );
@@ -100,6 +101,7 @@ export default function Profil() {
       <Section icone="contrast">Affichage</Section>
       <Carte>
         <ChoixAffichage />
+        <ChoixTransparence />
       </Carte>
     </Ecran>
   );

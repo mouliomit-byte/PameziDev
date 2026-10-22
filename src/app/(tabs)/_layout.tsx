@@ -26,7 +26,7 @@ export default function TabsLayout() {
         tabBarActiveTintColor: C.accent,
         tabBarInactiveTintColor: C.gris,
         tabBarLabelStyle: { fontWeight: '700', fontSize: 11 },
-        tabBarStyle: { borderTopColor: C.bord, backgroundColor: C.surface },
+        tabBarStyle: { borderTopColor: C.bord, backgroundColor: C.verre },
       }}>
       <Tabs.Screen name="index" options={{ title: 'Accueil', tabBarIcon: icone('home') }} />
       <Tabs.Screen name="tontine" options={{ title: 'Tontine', tabBarIcon: icone('people') }} />

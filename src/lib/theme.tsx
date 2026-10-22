@@ -4,7 +4,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { createContext, Fragment, ReactNode, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { useColorScheme } from 'react-native';
 
-import { appliquerTheme, type Theme } from '@/components/ui';
+import { appliquerTheme, type Theme, type Transparence, TRANSPARENCES } from '@/components/ui';
 import { type CouleurApp, estCouleurApp, REGLAGES_DEPART } from '@shared/regles';
 
 import { api } from './api';
@@ -13,11 +13,16 @@ export type PreferenceAffichage = 'auto' | 'clair' | 'sombre';
 
 const CLE = 'pamezi:affichage';
 const CLE_COULEUR = 'pamezi:couleur';
+const CLE_TRANSPARENCE = 'pamezi:transparence';
+/** Effet de verre activé par défaut, à 45 %. */
+const TRANSPARENCE_DEPART: Transparence = 45;
 
 type Ctx = {
   preference: PreferenceAffichage;
   theme: Theme;
   couleur: CouleurApp;
+  transparence: Transparence;
+  choisirTransparence: (t: Transparence) => void;
   choisir: (p: PreferenceAffichage) => void;
   /** Bascule directe clair ⇄ sombre (bouton soleil / lune). */
   basculer: () => void;
@@ -29,6 +34,8 @@ const Contexte = createContext<Ctx>({
   preference: 'auto',
   theme: 'clair',
   couleur: REGLAGES_DEPART.couleur,
+  transparence: TRANSPARENCE_DEPART,
+  choisirTransparence: () => {},
   choisir: () => {},
   basculer: () => {},
   definirCouleur: () => {},
@@ -38,6 +45,7 @@ export function AffichageProvider({ children }: { children: ReactNode }) {
   const systeme = useColorScheme();
   const [preference, setPreference] = useState<PreferenceAffichage>('auto');
   const [couleur, setCouleur] = useState<CouleurApp>(REGLAGES_DEPART.couleur);
+  const [transparence, setTransparence] = useState<Transparence>(TRANSPARENCE_DEPART);
 
   const definirCouleur = useCallback((c: CouleurApp) => {
     setCouleur(c);
@@ -46,11 +54,13 @@ export function AffichageProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     let actif = true;
-    AsyncStorage.multiGet([CLE, CLE_COULEUR])
-      .then(([[, p], [, c]]) => {
+    AsyncStorage.multiGet([CLE, CLE_COULEUR, CLE_TRANSPARENCE])
+      .then(([[, p], [, c], [, tr]]) => {
         if (!actif) return;
         if (p === 'clair' || p === 'sombre') setPreference(p);
         if (estCouleurApp(c)) setCouleur(c);
+        const n = Number(tr);
+        if (tr !== null && (TRANSPARENCES as readonly number[]).includes(n)) setTransparence(n as Transparence);
       })
       .catch(() => {})
       // La couleur gardée sur l'appareil s'affiche d'abord, puis celle du serveur la remplace.
@@ -70,15 +80,20 @@ export function AffichageProvider({ children }: { children: ReactNode }) {
     AsyncStorage.setItem(CLE, p).catch(() => {});
   }, []);
 
+  const choisirTransparence = useCallback((x: Transparence) => {
+    setTransparence(x);
+    AsyncStorage.setItem(CLE_TRANSPARENCE, String(x)).catch(() => {});
+  }, []);
+
   const theme: Theme = preference === 'auto' ? (systeme === 'dark' ? 'sombre' : 'clair') : preference;
   // La palette est changée avant que les écrans ne soient redessinés.
-  appliquerTheme(theme, couleur);
+  appliquerTheme(theme, couleur, transparence);
 
   const basculer = useCallback(() => choisir(theme === 'sombre' ? 'clair' : 'sombre'), [choisir, theme]);
 
   const valeur = useMemo(
-    () => ({ preference, theme, couleur, choisir, basculer, definirCouleur }),
-    [preference, theme, couleur, choisir, basculer, definirCouleur],
+    () => ({ preference, theme, couleur, transparence, choisirTransparence, choisir, basculer, definirCouleur }),
+    [preference, theme, couleur, transparence, choisirTransparence, choisir, basculer, definirCouleur],
   );
   return <Contexte.Provider value={valeur}>{children}</Contexte.Provider>;
 }
@@ -90,6 +105,6 @@ export const useAffichage = () => useContext(Contexte);
  * S'utilise comme `screenLayout` des navigateurs : la navigation en cours est conservée.
  */
 export function RedessinerAuTheme({ children }: { children: ReactNode }) {
-  const { theme, couleur } = useAffichage();
-  return <Fragment key={`${theme}-${couleur}`}>{children}</Fragment>;
+  const { theme, couleur, transparence } = useAffichage();
+  return <Fragment key={`${theme}-${couleur}-${transparence}`}>{children}</Fragment>;
 }

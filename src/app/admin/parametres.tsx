@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Text, View } from 'react-native';
 
 import { EcranAdmin } from '@/components/admin';
-import { ChoixAffichage, ChoixCouleur } from '@/components/affichage';
+import { ChoixAffichage, ChoixCouleur, ChoixTransparence } from '@/components/affichage';
 import { Action, Alerte, Badge, Bouton, C, Carte, Champ, Choix, s, Section } from '@/components/ui';
 import { useAdmin, useDonnees } from '@/lib/admin';
 import { api } from '@/lib/api';
@@ -58,6 +58,7 @@ export default function Parametres() {
       <Section icone="color-palette">Apparence</Section>
       <Carte>
         <ChoixAffichage />
+        <ChoixTransparence />
         <Text style={s.label}>Couleur de l’application</Text>
         <Text style={[s.petit, { marginBottom: 12 }]}>
           Couleur actuelle : {LIBELLE_COULEUR[couleur]}. Elle s’applique au back office et à l’application des abonnés (à leur prochaine ouverture).
